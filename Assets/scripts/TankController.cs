@@ -1,24 +1,33 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.UI;
 
 public class TankController : MonoBehaviour
 {
 	public GameObject projectile;
+	public Slider powerSlider;
+	public Text powerLabel;
+	public Text angleLabel;
 
 	public float movementSpeed = 1.0f;
-	public float rotationSpeed = 3.0f;
-	public float chargingSpeed = 1.0f;
+	public float rotationSpeed = 1.0f;
+	public float chargingSpeed = 0.01f;
+	public float windDragFactor = 10.0f;
 
 	public bool isMyTurn = true;
 
 	[SerializeField] private bool isCharging = false;
 	[SerializeField] private float firePower = 0.0f; // the fire power of the shoot in %
+	[SerializeField] private float fireAngleDeg = 0.0f;
 
 	// Use this for initialization
 	void Start ()
 	{
 		if (projectile == null)
 			throw new MissingComponentException("Object is missing a projectile. Please drag a projectile with the correct layer!");
+
+		UpdateFireAngleUI();
+		UpdateFirePowerUI();
 	}
 	
 	// Update is called once per frame
@@ -46,6 +55,10 @@ public class TankController : MonoBehaviour
 
 		var modifier = rotationSpeed * direction;
 		canonTransform.Rotate (Vector3.forward * modifier);
+		fireAngleDeg = canonTransform.eulerAngles.z;
+		// if (fireAngleDeg)
+
+		UpdateFireAngleUI ();
 		//float newQuaternion = transform.rotation. + modifier * Time.deltaTime;
 		//canonTransform.rotation = newQuaternion;
 	}
@@ -63,27 +76,22 @@ public class TankController : MonoBehaviour
 	{
 		// Charging the power from 0 until it release or firePower = 100
 		firePower += chargingSpeed;
-		if (firePower > 100)
+
+		if (firePower > 1)
 		{
-			firePower = 100;
+			firePower = 1;
 			FireWeapon();
 		}
-
+		UpdateFirePowerUI();
 		// this is where we gonna animate and other thing.
-		// Debug.Log ("Charging... " + firePower);
 	}
 	// Handle the firing of the projectile
 	void FireWeapon ()
 	{
 		isMyTurn = false;
-		var canon = GetCanon();
 		var firedProjectile = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
-
 		var projectileController = firedProjectile.GetComponent<ProjectileController>();
-		projectileController.FireProjectile(firePower, canon.eulerAngles.z);
-
-		Debug.Log(" Angles : " + canon.eulerAngles.z);
-		Debug.Log ("Fire for a power of : " + firePower);
+		projectileController.FireProjectile(firePower, fireAngleDeg, windDragFactor);
 	}
 	// Return the Canon transform
 	Transform GetCanon ()
@@ -92,6 +100,21 @@ public class TankController : MonoBehaviour
 		if (canonTransform == null)
 			throw new MissingComponentException ("The tank is missing a canon. Perhaps you should use the prefabs!");
 		return canonTransform;
+	}
+
+	// Update the UI element related to power (Slider and Label)
+	void UpdateFirePowerUI ()
+	{
+		var firePowerPercent = firePower * 100;
+		powerSlider.value = firePowerPercent;
+		powerLabel.text = firePowerPercent.ToString();
+	}
+
+	// Update the UI element related to angle (Label only for now)
+ 	void UpdateFireAngleUI ()
+	{
+		var RAD2DEG = 180 / Mathf.PI;
+		angleLabel.text = ((int)fireAngleDeg).ToString ();
 	}
 
 	// if we're rotating the canon left or right
