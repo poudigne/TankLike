@@ -1,9 +1,9 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workspace />
+  <MonoDevelop.Ide.Workspace ActiveConfiguration="Debug" />
   <MonoDevelop.Ide.Workbench ActiveDocument="Assets/scripts/ProjectileController.cs">
     <Files>
-      <File FileName="Assets/scripts/ProjectileController.cs" Line="28" Column="31" />
-      <File FileName="Assets/scripts/TankController.cs" Line="85" Column="47" />
+      <File FileName="Assets/scripts/ProjectileController.cs" Line="38" Column="1" />
+      <File FileName="Assets/scripts/TankController.cs" Line="80" Column="1" />
     </Files>
   </MonoDevelop.Ide.Workbench>
   <MonoDevelop.Ide.DebuggingService.Breakpoints>

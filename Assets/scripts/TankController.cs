@@ -38,7 +38,7 @@ public class TankController : MonoBehaviour
 		if (IsCanonMoving)
 			RotateCanon (GetCanonMovingDirection);
 		// If we moving the tank
-		if (IsTankMoving && isMyTurn)
+		if (IsTankMoving && isMyTurn && !isCharging)
 			MoveTank (GetTankMovingDirection);
 		// If we're charging and it's my turn
 		if (IsCharging && isMyTurn)
