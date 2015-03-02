@@ -1,11 +1,7 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2008
 
-Project("{910696ED-E068-2C15-D6A8-DFC096C7F492}") = "TankLike", "Assembly-CSharp-firstpass-vs.csproj", "{A0D19173-99BE-CAB3-0543-D4A8C1337052}"
-EndProject
 Project("{910696ED-E068-2C15-D6A8-DFC096C7F492}") = "TankLike", "Assembly-CSharp-vs.csproj", "{650F3A3C-50CA-51F2-1387-D4E686598AC0}"
-EndProject
-Project("{910696ED-E068-2C15-D6A8-DFC096C7F492}") = "TankLike", "Assembly-CSharp-Editor-firstpass-vs.csproj", "{6FD866FA-1506-7454-5D07-E423E423AEAA}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -13,23 +9,15 @@ Global
 		Release|Any CPU = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{A0D19173-99BE-CAB3-0543-D4A8C1337052}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{A0D19173-99BE-CAB3-0543-D4A8C1337052}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{A0D19173-99BE-CAB3-0543-D4A8C1337052}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{A0D19173-99BE-CAB3-0543-D4A8C1337052}.Release|Any CPU.Build.0 = Release|Any CPU
 		{650F3A3C-50CA-51F2-1387-D4E686598AC0}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{650F3A3C-50CA-51F2-1387-D4E686598AC0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{650F3A3C-50CA-51F2-1387-D4E686598AC0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{650F3A3C-50CA-51F2-1387-D4E686598AC0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{6FD866FA-1506-7454-5D07-E423E423AEAA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{6FD866FA-1506-7454-5D07-E423E423AEAA}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{6FD866FA-1506-7454-5D07-E423E423AEAA}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{6FD866FA-1506-7454-5D07-E423E423AEAA}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
 	EndGlobalSection
-											GlobalSection(MonoDevelopProperties) = preSolution
+																																GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = Assembly-CSharp.csproj
 		Policies = $0
 		$0.TextStylePolicy = $1

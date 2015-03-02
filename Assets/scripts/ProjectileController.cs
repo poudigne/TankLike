@@ -20,6 +20,7 @@ public class ProjectileController : MonoBehaviour {
 		var newX = transform.position.x + Mathf.Cos(angleRad) * (firePower/4);
 		var newY = (transform.position.y + Mathf.Sin(angleRad) * (firePower/4));
 		var newPos = new Vector2(newX,newY);
+
 		transform.position = newPos;
 	}
 
@@ -30,20 +31,6 @@ public class ProjectileController : MonoBehaviour {
 		angleRad = (launchAngle+90) * Mathf.PI/180 ;
 		firePower = power;
 		windFactor = windDragFactor; 
-		//transform.rigidbody2D.isKinematic = false;
-		//transform.rigidbody2D.drag = windDragFactor;
-	}
 
-
-
-	void OnCollisionEnter2D(Collision2D other)
-	{
-
-	}
-
-	void OnCollisonExit2D(Collision2D other)
-	{
-		Debug.Log ("KABOOOM !");
-		Destroy(gameObject);
 	}
 }

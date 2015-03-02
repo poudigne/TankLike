@@ -46,16 +46,18 @@
 	</Reference>
   </ItemGroup>
   <ItemGroup>
-     <Compile Include="Assets\TerrainController.cs" />
+     <Compile Include="Assets\scripts\GameController.cs" />
+     <Compile Include="Assets\scripts\GizmosDrawing\RaycastGizmosDraw.cs" />
+     <Compile Include="Assets\scripts\Objects\Implementations\Player.cs" />
+     <Compile Include="Assets\scripts\Objects\Interfaces\IPlayer.cs" />
+     <Compile Include="Assets\scripts\PlayerNameLabel.cs" />
      <Compile Include="Assets\scripts\ProjectileController.cs" />
+     <Compile Include="Assets\scripts\ShredderController.cs" />
      <Compile Include="Assets\scripts\TankController.cs" />
+     <Compile Include="Assets\scripts\TerrainController.cs" />
  <Reference Include="UnityEngine.UI">
  <HintPath>/Applications/Unity/Unity.app/Contents/UnityExtensions/Unity/GUISystem/4.6.3/UnityEngine.UI.dll</HintPath>
  </Reference>
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="Assembly-CSharp-firstpass.csproj">
-      <Project>{A0D19173-99BE-CAB3-0543-D4A8C1337052}</Project>      <Name>Assembly-CSharp-firstpass</Name>    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
