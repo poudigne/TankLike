@@ -3,8 +3,6 @@ using System.Collections;
 
 public class PlayerNameLabel : MonoBehaviour 
 {
-	[SerializeField] private Transform tank;
-
 	private Rect rect;
 	[SerializeField]private Vector2 offset;
 
@@ -14,7 +12,6 @@ public class PlayerNameLabel : MonoBehaviour
 	{
 		rect = new Rect(0,0,300,100);
 		offset = new Vector2(0.0f, -0.35f);
-		playerName = "Poudigne";
 	}
 
 	void OnGUI()
@@ -23,7 +20,7 @@ public class PlayerNameLabel : MonoBehaviour
 		GUIContent uiContent = new GUIContent(playerName);
 		Vector2 sizeOfLabel = style.CalcSize(uiContent);
 		rect = new Rect(0,0,sizeOfLabel.x, sizeOfLabel.y*2);
-		Vector2 tankPos = new Vector2(tank.position.x, tank.position.y);
+    Vector2 tankPos = new Vector2(gameObject.transform.position.x, gameObject.transform.position.y);
 		Vector3 point = Camera.main.WorldToScreenPoint(tankPos + offset);
 		rect.x = point.x - sizeOfLabel.x / 2;
 		rect.y = Screen.height - point.y - rect.height;

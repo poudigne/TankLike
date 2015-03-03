@@ -7,7 +7,6 @@ public class TankController : MonoBehaviour
 	public float movementSpeed = 1.0f;
 	public float rotationSpeed = 1.0f;
 	public float chargingSpeed = 0.01f;
-	public float windDragFactor = 10.0f;
 
 	public bool isMyTurn = true;
 
@@ -17,8 +16,8 @@ public class TankController : MonoBehaviour
 	[SerializeField] private Text angleLabel;
 
 	[SerializeField] private bool isCharging = false;
-	[SerializeField] private float firePower = 0.0f; // the fire power of the shoot in %
-	[SerializeField] private float fireAngleDeg = 0.0f;
+	[SerializeField] private float firePower; // the fire power of the shoot in %
+	[SerializeField] private float fireAngleDeg;
 
 	// Use this for initialization
 	void Start ()
@@ -79,19 +78,16 @@ public class TankController : MonoBehaviour
 	// We move the tank in the direction in the parameter : -1 to the left; 1 to the right
 	void MoveTank (int direction)
 	{
-		var modifier = movementSpeed * direction;
-		//float newPos = transform.position.x + modifier * Time.deltaTime;
-		//transform.position = new Vector3 (newPos, transform.position.y, transform.position.z);
 		var canonTransform = GetCanon ();
 		if (transform.localScale.x != direction){
-			transform.localScale = new Vector3(direction, transform.localScale.z);
-			canonTransform.rotation = Quaternion.Inverse(canonTransform.rotation);
+      gameObject.transform.localScale = new Vector3(direction, transform.localScale.y);
+      canonTransform.rotation = Quaternion.Inverse(canonTransform.rotation);
 		}
 
 		fireAngleDeg = canonTransform.eulerAngles.z;
 		
 		UpdateFireAngleUI ();
-		//transform.rigidbody2D.velocity = new Vector2(movementSpeed * direction,transform.rigidbody2D.velocity.y);
+		transform.rigidbody2D.velocity = new Vector2(movementSpeed * direction,transform.rigidbody2D.velocity.y);
 	}
 
 	// if we're holding space bar, we're charging the attack
@@ -115,13 +111,13 @@ public class TankController : MonoBehaviour
 		isMyTurn = false;
 		var firedProjectile = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
 		var projectileController = firedProjectile.GetComponent<ProjectileController>();
-		projectileController.FireProjectile(firePower, fireAngleDeg, windDragFactor);
+		projectileController.FireProjectile(firePower, fireAngleDeg);
 	}
 
 	// Return the Canon transform
 	Transform GetCanon ()
 	{
-		var canonTransform = transform.GetChild (0);
+		var canonTransform = transform.GetChild(0);
 		if (canonTransform == null)
 			throw new MissingComponentException ("The tank is missing a canon. Perhaps you should use the prefabs!");
 		return canonTransform;
@@ -147,7 +143,6 @@ public class TankController : MonoBehaviour
 	// Update the UI element related to angle (Label only for now)
  	void UpdateFireAngleUI ()
 	{
-		var RAD2DEG = 180 / Mathf.PI;
 		angleLabel.text = ((int)fireAngleDeg).ToString ();
 	}
 
