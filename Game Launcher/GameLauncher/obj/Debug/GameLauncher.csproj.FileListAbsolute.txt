@@ -1,0 +1,13 @@
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\bin\Debug\GameLauncher.exe.config
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\bin\Debug\GameLauncher.exe
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\bin\Debug\GameLauncher.pdb
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\obj\Debug\GameLauncher.csprojResolveAssemblyReference.cache
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\obj\Debug\MainWindow.baml
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\obj\Debug\MainWindow.g.cs
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\obj\Debug\App.g.cs
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\obj\Debug\GameLauncher_MarkupCompile.cache
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\obj\Debug\GameLauncher.g.resources
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\obj\Debug\GameLauncher.Properties.Resources.resources
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\obj\Debug\GameLauncher.csproj.GenerateResource.Cache
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\obj\Debug\GameLauncher.exe
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Game Launcher\GameLauncher\obj\Debug\GameLauncher.pdb
