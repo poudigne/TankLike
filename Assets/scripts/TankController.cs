@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 using System.Collections;
 using UnityEngine.UI;
 
@@ -14,17 +15,22 @@ public class TankController : MonoBehaviour
 	[SerializeField] private Slider powerSlider;
 	[SerializeField] private Text powerLabel;
 	[SerializeField] private Text angleLabel;
+  [SerializeField] private PlayerInfo playerInfo;
 
 	[SerializeField] private bool isCharging = false;
 	[SerializeField] private float firePower; // the fire power of the shoot in %
 	[SerializeField] private float fireAngleDeg;
 
-	// Use this for initialization
+
+  #region Unity Engine
+  // Use this for initialization
 	void Start ()
 	{
 		// projectile = GameObject.FindObjectOfType
 		if (projectile == null)
 			throw new MissingComponentException("Object is missing a projectile. Please drag a projectile with the correct layer!");
+
+	  playerInfo = GetComponent<PlayerInfo>();
 
 		InitilializeUIElement();
 
@@ -49,8 +55,8 @@ public class TankController : MonoBehaviour
 		if (!IsCharging && firePower > 0.0f && isMyTurn)
 			FireWeapon ();
 	}
-
-	// Find the UI element for future reference, this is done programaticaly because tank are Created programmaticaly
+  #endregion
+  // Find the UI element for future reference, this is done programaticaly because tank are Created programmaticaly
 	void InitilializeUIElement ()
 	{
 		powerSlider = GameObject.FindObjectOfType<Slider>();
@@ -87,7 +93,7 @@ public class TankController : MonoBehaviour
 		fireAngleDeg = canonTransform.eulerAngles.z;
 		
 		UpdateFireAngleUI ();
-		transform.rigidbody2D.velocity = new Vector2(movementSpeed * direction,transform.rigidbody2D.velocity.y);
+		transform.GetComponent<Rigidbody2D>().velocity = new Vector2(movementSpeed * direction,transform.GetComponent<Rigidbody2D>().velocity.y);
 	}
 
 	// if we're holding space bar, we're charging the attack
@@ -114,15 +120,6 @@ public class TankController : MonoBehaviour
 		projectileController.FireProjectile(firePower, fireAngleDeg);
 	}
 
-	// Return the Canon transform
-	Transform GetCanon ()
-	{
-		var canonTransform = transform.GetChild(0);
-		if (canonTransform == null)
-			throw new MissingComponentException ("The tank is missing a canon. Perhaps you should use the prefabs!");
-		return canonTransform;
-	}
-
 	// Restrict the canon rotation
 	void RestrictCanonRotation (Transform canonTransform)
 	{
@@ -131,22 +128,8 @@ public class TankController : MonoBehaviour
 		else if (fireAngleDeg < 270 && fireAngleDeg > 90) 
 			canonTransform.eulerAngles = new Vector3(canonTransform.eulerAngles.x, canonTransform.eulerAngles.y, 270);
 	}
-
-	// Update the UI element related to power (Slider and Label)
-	void UpdateFirePowerUI ()
-	{
-		var firePowerPercent = firePower * 100;
-		powerSlider.value = firePowerPercent;
-		powerLabel.text = firePowerPercent.ToString();
-	}
-
-	// Update the UI element related to angle (Label only for now)
- 	void UpdateFireAngleUI ()
-	{
-		angleLabel.text = ((int)fireAngleDeg).ToString ();
-	}
-
-	Text FindUILabelWithName (string labelname)
+  
+  Text FindUILabelWithName (string labelname)
 	{
 		var labels = FindObjectsOfType<Text>();
 		foreach(var label in labels)
@@ -156,7 +139,30 @@ public class TankController : MonoBehaviour
 		}
 		return null;
 	}
+  // Return the Canon transform
+  Transform GetCanon()
+  {
+    var canonTransform = transform.GetChild(0);
+    if (canonTransform == null)
+      throw new MissingComponentException("The tank is missing a canon. Perhaps you should use the prefabs!");
+    return canonTransform;
+  }
 
+  #region UI Update
+  // Update the UI element related to power (Slider and Label)
+  void UpdateFirePowerUI()
+  {
+    var firePowerPercent = firePower * 100;
+    powerSlider.value = firePowerPercent;
+    powerLabel.text = firePowerPercent.ToString();
+  }
+
+  // Update the UI element related to angle (Label only for now)
+  void UpdateFireAngleUI()
+  {
+    angleLabel.text = ((int)fireAngleDeg).ToString();
+  }
+  #endregion
 	#region Input check
 	// if we're rotating the canon left or right
 	bool IsCanonMoving { get { return Input.GetKey (KeyCode.W) || Input.GetKey (KeyCode.S); } }
@@ -170,5 +176,8 @@ public class TankController : MonoBehaviour
 	// If we press A we want to move to the left so we return -1 otherwise 1
 	int GetTankMovingDirection { get { return (Input.GetKey (KeyCode.A) ? -1 : 1); } }
 	#endregion
+  #region
 
+  
+  #endregion
 }
