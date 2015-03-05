@@ -20,7 +20,19 @@ public class ProjectileController : MonoBehaviour
 
   private PlayerInfo attackerInfo;
 
+  private CameraController cameraController;
+
   #region Unity Engine
+  void Awake()
+  {
+    cameraController = Camera.main.GetComponent<CameraController>();
+  }
+
+  void Update()
+  {
+    cameraController.RepositionCamera(transform.position, false);
+  }
+
   // Physics manipulation : Frame-Rate independant
   void FixedUpdate()
   {
@@ -64,7 +76,7 @@ public class ProjectileController : MonoBehaviour
       if (hit.tag == "Player")
       {
         Vector2 hitPos = new Vector2(hit.transform.position.x, hit.transform.position.y);
-        float distanceToMiddle = Vector3.Distance(transform.position, (hitPos + hit.offset));
+        float distanceToMiddle = Vector2.Distance(transform.position, (hitPos + hit.offset));
         PlayerInfo tankPlayerInfo = hit.transform.gameObject.GetComponent<PlayerInfo>();
         float percentage = 1 - (distanceToMiddle/radius);
         percentage = percentage < 0 ? 0 : percentage;

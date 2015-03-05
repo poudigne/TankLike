@@ -21,14 +21,12 @@ public class TankController : MonoBehaviour
 	[SerializeField] private float fireAngleDeg;
 
 
+  private CameraController cameraController;
   #region Unity Engine
   // Use this for initialization
 	void Start ()
 	{
-		// projectile = GameObject.FindObjectOfType
-		if (projectile == null)
-			throw new MissingComponentException("Object is missing a projectile. Please drag a projectile with the correct layer!");
-
+	  cameraController = Camera.main.GetComponent<CameraController>();
 		InitilializeUIElement();
 
 		UpdateFireAngleUI();
@@ -38,6 +36,8 @@ public class TankController : MonoBehaviour
 	// Update is called once per frame
 	void Update ()
 	{
+	  if (isMyTurn)
+	    cameraController.RepositionCamera(transform.position);
 		// If we rotating the canon; 
 		// I dont validate the isMyTurn boolean cause we want to let the player to move the canon around
 		if (IsCanonMoving)
