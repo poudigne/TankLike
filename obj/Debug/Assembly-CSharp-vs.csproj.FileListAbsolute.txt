@@ -10,4 +10,3 @@ C:\Users\Pierre-Luc\Documents\GitHub\TankLike\obj\Debug\Assembly-CSharp.dll
 C:\Users\Pierre-Luc\Documents\GitHub\TankLike\obj\Debug\Assembly-CSharp.pdb
 C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Temp\bin\Debug\Unity.SerializationLogic.dll
 C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Temp\bin\Debug\Unity.CecilTools.dll
-C:\Users\Pierre-Luc\Documents\GitHub\TankLike\obj\Debug\Assembly-CSharp-vs.csprojResolveAssemblyReference.cache

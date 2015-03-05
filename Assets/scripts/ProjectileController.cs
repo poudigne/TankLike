@@ -4,14 +4,21 @@ using System.Collections;
 
 public class ProjectileController : MonoBehaviour
 {
+#if DEBUG
+  public bool isDebug = false;
+#else
+  public bool isDebug = true;
+#endif
+  public ParticleSystem explosionAnim;
+
   [SerializeField] private bool isFired;
+
   [SerializeField] private float firePower;
   [SerializeField] private float angleRad;
-
   [SerializeField] private float baseDamage = 150f;
-  [SerializeField] private float radius = 0.5f;
+  [SerializeField] private float radius = 0.4f;
 
-  public GameObject explosionAnim;
+  private PlayerInfo attackerInfo;
 
   #region Unity Engine
   // Physics manipulation : Frame-Rate independant
@@ -29,37 +36,51 @@ public class ProjectileController : MonoBehaviour
   void OnCollisionEnter2D(Collision2D other)
   {
     GameObject explosion = Instantiate(explosionAnim, gameObject.transform.position, Quaternion.identity) as GameObject;
-    ApplyDamage();
-    //Destroy(gameObject);
+    ParticleSystem explosionPFX = explosion.GetComponent<ParticleSystem>();
+    Destroy(explosion, explosionPFX.duration);
+
+    CalculateDamage();
+    Destroy(gameObject);
   }
   #endregion
   // Sets the flags and value to launch the projectile
-  public void FireProjectile(float power, float launchAngle)
+  public void FireProjectile(float power, float launchAngle, PlayerInfo pAttackerInfo)
   {
     isFired = true;
     firePower = power;
     angleRad = (launchAngle + 90) * Mathf.PI / 180;
+    attackerInfo = pAttackerInfo;
   }
 
-  private void ApplyDamage()
+  private void CalculateDamage()
   {
     Vector2 pos = new Vector2(transform.position.x, transform.position.y);
-    var hitTank = Physics2D.OverlapCircleAll(pos, radius);
+    Collider2D[] hitTank = Physics2D.OverlapCircleAll(pos, radius);
 
-    DrawCircle();
+    if (isDebug) DrawCircle();
 
     foreach (var hit in hitTank)
     {
-      var distanceToMiddle = Vector3.Distance(transform.position, hit.transform.position);
       if (hit.tag == "Player")
       {
-        Debug.Log(hit);
-        var tank = hit.transform.gameObject.GetComponent<PlayerInfo>();
-        Debug.Log("Ho boboy player " + tank.playerName + " has been hit " + distanceToMiddle);
+        Vector2 hitPos = new Vector2(hit.transform.position.x, hit.transform.position.y);
+        float distanceToMiddle = Vector3.Distance(transform.position, (hitPos + hit.offset));
+        PlayerInfo tankPlayerInfo = hit.transform.gameObject.GetComponent<PlayerInfo>();
+        float percentage = 1 - (distanceToMiddle/radius);
+        percentage = percentage < 0 ? 0 : percentage;
+        if (percentage == 0)
+          return;
+        ApplyDamage(baseDamage * percentage, tankPlayerInfo);
       }
     }
   }
 
+  private void ApplyDamage(float damageAmount, PlayerInfo defenderInfo)
+  {
+    defenderInfo.DoDamage(damageAmount, attackerInfo);
+  }
+
+  #region Debug function
   void DrawCircle()
   {
     float theta_scale = 0.1f;             //Set lower to add more pointsS
@@ -68,9 +89,9 @@ public class ProjectileController : MonoBehaviour
     LineRenderer lineRenderer = gameObject.AddComponent<LineRenderer>();
     lineRenderer.material = new Material(Shader.Find("Particles/Additive"));
     lineRenderer.SetColors(Color.red, Color.red);
-    lineRenderer.SetWidth(0.05f, 0.05f);
+    lineRenderer.SetWidth(0.025f, 0.025f);
     lineRenderer.SetVertexCount(size);
-    var r = 0.3f;
+    var r = radius;
     int i = 0;
     for (float theta = 0; theta < 2 * Mathf.PI; theta += 0.1f)
     {
@@ -82,4 +103,5 @@ public class ProjectileController : MonoBehaviour
       i++;
     }
   }
+  #endregion
 }

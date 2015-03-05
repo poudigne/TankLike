@@ -15,7 +15,6 @@ public class TankController : MonoBehaviour
 	[SerializeField] private Slider powerSlider;
 	[SerializeField] private Text powerLabel;
 	[SerializeField] private Text angleLabel;
-  [SerializeField] private PlayerInfo playerInfo;
 
 	[SerializeField] private bool isCharging = false;
 	[SerializeField] private float firePower; // the fire power of the shoot in %
@@ -29,8 +28,6 @@ public class TankController : MonoBehaviour
 		// projectile = GameObject.FindObjectOfType
 		if (projectile == null)
 			throw new MissingComponentException("Object is missing a projectile. Please drag a projectile with the correct layer!");
-
-	  playerInfo = GetComponent<PlayerInfo>();
 
 		InitilializeUIElement();
 
@@ -114,10 +111,12 @@ public class TankController : MonoBehaviour
 	// Handle the firing of the projectile
 	void FireWeapon ()
 	{
-		isMyTurn = false;
-		var firedProjectile = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
-		var projectileController = firedProjectile.GetComponent<ProjectileController>();
-		projectileController.FireProjectile(firePower, fireAngleDeg);
+		GameObject firedProjectile = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
+		ProjectileController projectileController = firedProjectile.GetComponent<ProjectileController>();
+	  PlayerInfo attackerInfo = GetComponent<PlayerInfo>();
+    projectileController.FireProjectile(firePower, fireAngleDeg, attackerInfo);
+    firePower = 0.0f;
+    //isMyTurn = false;
 	}
 
 	// Restrict the canon rotation
@@ -131,7 +130,7 @@ public class TankController : MonoBehaviour
   
   Text FindUILabelWithName (string labelname)
 	{
-		var labels = FindObjectsOfType<Text>();
+		Text[] labels = FindObjectsOfType<Text>();
 		foreach(var label in labels)
 		{
 			if (label.name == labelname)
@@ -142,7 +141,7 @@ public class TankController : MonoBehaviour
   // Return the Canon transform
   Transform GetCanon()
   {
-    var canonTransform = transform.GetChild(0);
+    Transform canonTransform = transform.GetChild(0);
     if (canonTransform == null)
       throw new MissingComponentException("The tank is missing a canon. Perhaps you should use the prefabs!");
     return canonTransform;
@@ -152,7 +151,7 @@ public class TankController : MonoBehaviour
   // Update the UI element related to power (Slider and Label)
   void UpdateFirePowerUI()
   {
-    var firePowerPercent = firePower * 100;
+    float firePowerPercent = firePower * 100;
     powerSlider.value = firePowerPercent;
     powerLabel.text = firePowerPercent.ToString();
   }
