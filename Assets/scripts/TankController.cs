@@ -10,6 +10,7 @@ public class TankController : MonoBehaviour
 	public float chargingSpeed = 0.01f;
 
 	public bool isMyTurn = true;
+  public bool hasFired = false;
 
 	[SerializeField] private GameObject projectile;
 	[SerializeField] private Slider powerSlider;
@@ -17,40 +18,63 @@ public class TankController : MonoBehaviour
 	[SerializeField] private Text angleLabel;
 
 	[SerializeField] private bool isCharging = false;
+  
 	[SerializeField] private float firePower; // the fire power of the shoot in %
 	[SerializeField] private float fireAngleDeg;
-
+  [SerializeField] private float nextTurnDelay = 2.0f;
+  private GameObject firedProjectile;
 
   private CameraController cameraController;
+  private GameController gameController;
   #region Unity Engine
+
+  void Awake()
+  {
+    gameController = FindObjectOfType<GameController>();
+  }
+
   // Use this for initialization
 	void Start ()
 	{
 	  cameraController = Camera.main.GetComponent<CameraController>();
 		InitilializeUIElement();
 
-		UpdateFireAngleUI();
-		UpdateFirePowerUI();
+    if (isMyTurn)
+    {
+      UpdateFireAngleUI();
+      UpdateFirePowerUI();
+    }
 	}
 	
 	// Update is called once per frame
 	void Update ()
 	{
 	  if (isMyTurn)
-	    cameraController.RepositionCamera(transform.position);
-		// If we rotating the canon; 
-		// I dont validate the isMyTurn boolean cause we want to let the player to move the canon around
-		if (IsCanonMoving)
-			RotateCanon (GetCanonMovingDirection);
-		// If we moving the tank
-		if (IsTankMoving && isMyTurn && !isCharging)
-			MoveTank (GetTankMovingDirection);
-		// If we're charging and it's my turn
-		if (IsCharging && isMyTurn)
-			ChargingWeapon ();
-		// If we're done charging and we have a firepower, then we're firing
-		if (!IsCharging && firePower > 0.0f && isMyTurn)
-			FireWeapon ();
+	  {
+      if (!hasFired)
+        cameraController.RepositionCamera(transform.position);
+      // If we rotating the canon; 
+      // I dont validate the isMyTurn boolean cause we want to let the player to move the canon around
+      if (IsCanonMoving)
+        RotateCanon(GetCanonMovingDirection);
+      // If we moving the tank
+      if (IsTankMoving && !isCharging)
+        MoveTank(GetTankMovingDirection);
+      // If we're charging and it's my turn
+      if (IsCharging)
+        ChargingWeapon();
+      // If we're done charging and we have a firepower, then we're firing
+      if (!IsCharging && firePower > 0.0f)
+        FireWeapon();
+
+      if (hasFired && firedProjectile == null)
+      {
+        isMyTurn = false;
+        hasFired = false;
+        Invoke("NextTurn", nextTurnDelay);
+      }
+	  }
+	  
 	}
   #endregion
   // Find the UI element for future reference, this is done programaticaly because tank are Created programmaticaly
@@ -111,12 +135,12 @@ public class TankController : MonoBehaviour
 	// Handle the firing of the projectile
 	void FireWeapon ()
 	{
-		GameObject firedProjectile = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
+		firedProjectile = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
 		ProjectileController projectileController = firedProjectile.GetComponent<ProjectileController>();
 	  PlayerInfo attackerInfo = GetComponent<PlayerInfo>();
     projectileController.FireProjectile(firePower, fireAngleDeg, attackerInfo);
     firePower = 0.0f;
-    //isMyTurn = false;
+	  hasFired = true;
 	}
 
 	// Restrict the canon rotation
@@ -147,7 +171,23 @@ public class TankController : MonoBehaviour
     return canonTransform;
   }
 
+  // Call the GameController to make next player to play
+  void NextTurn()
+  {
+    Debug.Log("NEXT TURN CALLED");
+    
+    gameController.PlayNext();
+  }
+
   #region UI Update
+  // Attach the UI ELements to the GameObject
+  public void HookUIElements()
+  {
+    powerSlider = GameObject.FindGameObjectWithTag("power_value_slider").GetComponent<Slider>();
+    powerLabel = GameObject.FindGameObjectWithTag("power_value_label").GetComponent<Text>();
+    angleLabel = GameObject.FindGameObjectWithTag("angle_value_label").GetComponent<Text>();
+  }
+
   // Update the UI element related to power (Slider and Label)
   void UpdateFirePowerUI()
   {

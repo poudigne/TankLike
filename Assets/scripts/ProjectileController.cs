@@ -18,14 +18,18 @@ public class ProjectileController : MonoBehaviour
   [SerializeField] private float baseDamage = 150f;
   [SerializeField] private float radius = 0.4f;
 
-  private PlayerInfo attackerInfo;
+  [SerializeField] private PlayerInfo attackerInfo;
 
   private CameraController cameraController;
+  private ChatController chatController;
+
+  private Vector3 origPos;
 
   #region Unity Engine
   void Awake()
   {
     cameraController = Camera.main.GetComponent<CameraController>();
+    chatController = FindObjectOfType<ChatController>();
   }
 
   void Update()
@@ -43,6 +47,13 @@ public class ProjectileController : MonoBehaviour
     var newY = (transform.position.y + Mathf.Sin(angleRad) * (firePower / 4));
     var newPos = new Vector2(newX, newY);
 
+    Vector3 moveDirection = gameObject.transform.position - origPos;
+    if (moveDirection != Vector3.zero)
+    {
+      float angle = Mathf.Atan2(moveDirection.y, moveDirection.x) * Mathf.Rad2Deg;
+      transform.rotation = Quaternion.AngleAxis(angle, Vector3.forward);
+    }
+
     transform.position = newPos;
   }
   void OnCollisionEnter2D(Collision2D other)
@@ -58,10 +69,12 @@ public class ProjectileController : MonoBehaviour
   // Sets the flags and value to launch the projectile
   public void FireProjectile(float power, float launchAngle, PlayerInfo pAttackerInfo)
   {
+    Debug.Log(pAttackerInfo);
     isFired = true;
     firePower = power;
     angleRad = (launchAngle + 90) * Mathf.PI / 180;
     attackerInfo = pAttackerInfo;
+    origPos = transform.position;
   }
 
   private void CalculateDamage()
@@ -81,7 +94,10 @@ public class ProjectileController : MonoBehaviour
         float percentage = 1 - (distanceToMiddle/radius);
         percentage = percentage < 0 ? 0 : percentage;
         if (percentage == 0)
+        {
+          chatController.AddNewLine(string.Empty, attackerInfo.playerName + " miss ");
           return;
+        }
         ApplyDamage(baseDamage * percentage, tankPlayerInfo);
       }
     }

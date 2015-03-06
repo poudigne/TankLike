@@ -10,8 +10,6 @@ public class PlayerNameLabel : MonoBehaviour
   
   [SerializeField] private int healthBarLeft = 110;
   [SerializeField] private int barTop = 1;
-  [SerializeField] private float healthBarLength = 150.0f;
-  [SerializeField] private float healthBarHeight = 5;
 
   private PlayerInfo playerInfo;
   private GUIStyle myStyle;

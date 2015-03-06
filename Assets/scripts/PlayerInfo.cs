@@ -18,7 +18,8 @@ public class PlayerInfo : MonoBehaviour
     set
     {
       _playerName = value;
-      playerNameLabel.SetName(_playerName);
+      if (playerNameLabel != null)
+        playerNameLabel.SetName(_playerName);
     }
   }
   #endregion
@@ -28,9 +29,9 @@ public class PlayerInfo : MonoBehaviour
 
   void Start()
   {
-    chatController = FindObjectOfType<ChatController>() as ChatController;
+    
     if (chatController == null)
-      Debug.LogError("ChatController not found. Please create one. ["+chatController+"]");
+      Debug.LogError("ChatController not found. Please create one.");
     health = maxHealth;
     playerNameLabel = GetComponent<PlayerNameLabel>();
     playerName = _playerName;
@@ -43,6 +44,7 @@ public class PlayerInfo : MonoBehaviour
   {
     int damageInt = (int) damageAmount;
     health -= damageInt;
+    ChatController chatController = FindObjectOfType<ChatController>();
     chatController.AddNewLine(string.Empty, attackerInfo.playerName + " attacked " + playerName + " for " + damageInt + " damage");
     if (health <= 0)
     {
