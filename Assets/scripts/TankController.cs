@@ -108,7 +108,9 @@ public class TankController : MonoBehaviour
 		var canonTransform = GetCanon ();
 		if (transform.localScale.x != direction){
       gameObject.transform.localScale = new Vector3(direction, transform.localScale.y);
-      canonTransform.rotation = Quaternion.Inverse(canonTransform.rotation);
+      Debug.Log("Changing canon directions");
+      var rotation = Quaternion.Inverse(canonTransform.rotation);
+      canonTransform.rotation = Quaternion.Inverse(rotation);
 		}
 
 		fireAngleDeg = canonTransform.eulerAngles.z;
