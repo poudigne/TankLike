@@ -32,7 +32,7 @@ namespace Network.PSoft.Network.Facade
     {
       string link = BuildURL(registerInformations, RequestAction.CreateUser);
       LoggingService.Debug(String.Format("Preparing request to send. URL : {0}", link), typeof(RemotingFacade).Name, "SendRegisterAccountRequest");
-      return RemotingService.GetInstance().SendRequestPost(link, registerInformations.GetParametersString());
+      return RemotingService.GetInstance().HttpPostRequest(link, registerInformations.GetParametersDict());
     }
 
     private string BuildURL(IURLParameters registerInformations, RequestAction action)
