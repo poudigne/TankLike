@@ -59,6 +59,7 @@
      <Compile Include="Assets\scripts\ProjectileController.cs" />
      <Compile Include="Assets\scripts\ShredderController.cs" />
      <Compile Include="Assets\scripts\TankController.cs" />
+     <None Include="Assets\scripts\libs\log.txt" />
  <Reference Include="UnityEngine.UI">
  <HintPath>C:/Program Files/Unity/Editor/Data/UnityExtensions/Unity/GUISystem/UnityEngine.UI.dll</HintPath>
  </Reference>

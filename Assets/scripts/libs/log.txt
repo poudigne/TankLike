@@ -1,0 +1,6 @@
+
+[3/10/2015 8:39:11 PM],  Registering user sent, waiting for answer from API., Call: RemotingService.SendRequestPost()
+[3/10/2015 8:40:05 PM],  Preparing request to send. URL : http://api.francoischolette.com/api/1.0/users, Call: RemotingFacade.SendRegisterAccountRequest()
+[3/10/2015 8:40:06 PM],  Registering user sent, waiting for answer from API., Call: RemotingService.SendRequestPost()
+[3/10/2015 8:48:07 PM],  Preparing request to send. URL : http://api.francoischolette.com/api/1.0/users, Call: RemotingFacade.SendRegisterAccountRequest()
+[3/10/2015 8:48:07 PM],  Registering user sent, waiting for answer from API., Call: RemotingService.SendRequestPost()

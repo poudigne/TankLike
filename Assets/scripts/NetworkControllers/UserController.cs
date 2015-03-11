@@ -1,19 +1,15 @@
-﻿using System;
-using System.Linq;
+﻿using System.Linq;
 using Network.PSoft.BusinessObject.Remoting;
+using Network.PSoft.Network;
 using Network.PSoft.Network.Facade;
 using UnityEngine;
 using UnityEngine.UI;
-using System.Collections;
-using Network.PSoft.Network;
 
 public class UserController : MonoBehaviour
 {
   public Transform loginForm;
   public Transform registerForm;
   public Transform forgotPassword;
-
-  private RemotingFacade remotingService;
 
   private const string GAME_NAME = "TANK";
   private const string INPUT_USERNAME_TAG = "input_username";
@@ -25,7 +21,6 @@ public class UserController : MonoBehaviour
 
   void Awake()
   {
-    remotingService = new RemotingFacade(GAME_NAME);
   }
 
   public void Login()
@@ -59,7 +54,7 @@ public class UserController : MonoBehaviour
       return;
     }
 
-    remotingService.SendRegisterAccountRequest(registerInformations);
+    RemotingFacade.GetInstance().SendRegisterAccountRequest(registerInformations);
   }
 
   #region Form validation

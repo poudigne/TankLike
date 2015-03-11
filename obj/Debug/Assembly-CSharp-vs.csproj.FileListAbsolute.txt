@@ -13,3 +13,4 @@ C:\Users\Pierre-Luc\Documents\GitHub\TankLike\obj\Debug\Assembly-CSharp.pdb
 C:\Users\Pierre-Luc\Documents\GitHub\TankLike\obj\Debug\Assembly-CSharp-vs.csprojResolveAssemblyReference.cache
 C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Temp\bin\Debug\Network.dll
 C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Temp\bin\Debug\log4net.dll
+C:\Users\Pierre-Luc\Documents\GitHub\TankLike\Temp\bin\Debug\Network.pdb
