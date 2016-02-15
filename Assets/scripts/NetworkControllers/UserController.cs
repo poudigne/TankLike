@@ -1,7 +1,4 @@
 ﻿using System.Linq;
-using Network.PSoft.BusinessObject.Remoting;
-using Network.PSoft.Network;
-using Network.PSoft.Network.Facade;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -37,49 +34,49 @@ public class UserController : MonoBehaviour
 
   public void RegisterAccount()
   {
-    RegisterInformations registerInformations = new RegisterInformations()
-    {
-      firstname = GetFieldValueWithTag(registerForm,INPUT_FIRSTNAME_TAG),
-      lastname = GetFieldValueWithTag(registerForm,INPUT_LASTNAME_TAG),
-      username = GetFieldValueWithTag(registerForm, INPUT_USERNAME_TAG),
-      email = GetFieldValueWithTag(registerForm,INPUT_EMAIL_TAG),
-      password = GetFieldValueWithTag(registerForm,INPUT_PASSWORD_TAG),
-      passwordConfirm = GetFieldValueWithTag(registerForm,INPUT_CONFIRMPASSWORD_TAG),
-    };
+    //RegisterInformations registerInformations = new RegisterInformations()
+    //{
+    //  firstname = GetFieldValueWithTag(registerForm,INPUT_FIRSTNAME_TAG),
+    //  lastname = GetFieldValueWithTag(registerForm,INPUT_LASTNAME_TAG),
+    //  username = GetFieldValueWithTag(registerForm, INPUT_USERNAME_TAG),
+    //  email = GetFieldValueWithTag(registerForm,INPUT_EMAIL_TAG),
+    //  password = GetFieldValueWithTag(registerForm,INPUT_PASSWORD_TAG),
+    //  passwordConfirm = GetFieldValueWithTag(registerForm,INPUT_CONFIRMPASSWORD_TAG),
+    //};
 
     string errorMessage = string.Empty;
-    if (!ValidateRegisterForm(registerInformations, out errorMessage))
-    {
-      Debug.Log("Something went wrong. Error : " + errorMessage);
-      return;
-    }
+    //if (!ValidateRegisterForm(registerInformations, out errorMessage))
+    //{
+    //  Debug.Log("Something went wrong. Error : " + errorMessage);
+    //  return;
+    //}
 
-    RemotingFacade.GetInstance().SendRegisterAccountRequest(registerInformations);
+    //RemotingFacade.GetInstance().SendRegisterAccountRequest(registerInformations);
   }
 
   #region Form validation
-  static bool ValidateRegisterForm(RegisterInformations registerInformations, out string errorMessage)
-  {
-    if (!registerInformations.FieldHasValue())
-    {
-      errorMessage = "Somefield are invalid.";
-      return false;
-    }
+  //static bool ValidateRegisterForm(RegisterInformations registerInformations, out string errorMessage)
+  //{
+  //  if (!registerInformations.FieldHasValue())
+  //  {
+  //    errorMessage = "Somefield are invalid.";
+  //    return false;
+  //  }
 
-    if (!registerInformations.IsPasswordValid())
-    {
-      errorMessage = "Password is invalid.";
-      return false;
-    }
+  //  if (!registerInformations.IsPasswordValid())
+  //  {
+  //    errorMessage = "Password is invalid.";
+  //    return false;
+  //  }
 
-    if (!registerInformations.IsPasswordMath())
-    {
-      errorMessage = "Passwords doesn't match.";
-      return false;
-    }
-    errorMessage = string.Empty;
-    return true;
-  }
+  //  if (!registerInformations.IsPasswordMath())
+  //  {
+  //    errorMessage = "Passwords doesn't match.";
+  //    return false;
+  //  }
+  //  errorMessage = string.Empty;
+  //  return true;
+  //}
   #endregion
 
   string GetFieldValueWithTag(Transform registerForm, string tag)
