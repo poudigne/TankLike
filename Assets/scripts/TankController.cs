@@ -103,11 +103,7 @@ public class TankController : MonoBehaviour
         fireAngleDeg = canonTransform.eulerAngles.z;
         RestrictCanonRotation(canonTransform);
 
-        // if (fireAngleDeg)
-
         UpdateFireAngleUI();
-        //float newQuaternion = transform.rotation. + modifier * Time.deltaTime;
-        //canonTransform.rotation = newQuaternion;
     }
 
     // We move the tank in the direction in the parameter : -1 to the left; 1 to the right
@@ -118,8 +114,6 @@ public class TankController : MonoBehaviour
         {
             gameObject.transform.localScale = new Vector3(direction, transform.localScale.y);
             Debug.Log("Changing canon directions");
-            var rotation = Quaternion.Inverse(canonTransform.rotation);
-            canonTransform.rotation = Quaternion.Inverse(rotation);
         }
 
         fireAngleDeg = canonTransform.eulerAngles.z;

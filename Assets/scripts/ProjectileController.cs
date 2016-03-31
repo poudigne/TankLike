@@ -5,9 +5,9 @@ using System.Collections;
 public class ProjectileController : MonoBehaviour
 {
 #if DEBUG
-  public bool isDebug = false;
-#else
   public bool isDebug = true;
+#else
+  public bool isDebug = false;
 #endif
   public ParticleSystem explosionAnim;
 
