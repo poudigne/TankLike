@@ -115,8 +115,8 @@ public class TankController : MonoBehaviour
             gameObject.transform.localScale = new Vector3(direction, transform.localScale.y);
             Debug.Log("Changing canon directions");
         }
-
-        fireAngleDeg = canonTransform.eulerAngles.z;
+        
+        fireAngleDeg = (transform.localScale.x < 0 ? 360 - canonTransform.eulerAngles.z : canonTransform.eulerAngles.z);
 
         UpdateFireAngleUI();
         transform.GetComponent<Rigidbody2D>().velocity = new Vector2(movementSpeed * direction, transform.GetComponent<Rigidbody2D>().velocity.y);
@@ -143,8 +143,7 @@ public class TankController : MonoBehaviour
         firedProjectile = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
         ProjectileController projectileController = firedProjectile.GetComponent<ProjectileController>();
         PlayerInfo attackerInfo = GetComponent<PlayerInfo>();
-        if (transform.localScale.x < 0)
-            fireAngleDeg = 360 - fireAngleDeg;
+        
         projectileController.FireProjectile(firePower, fireAngleDeg, attackerInfo);
         firePower = 0.0f;
         hasFired = true;
