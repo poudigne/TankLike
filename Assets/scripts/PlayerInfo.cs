@@ -7,9 +7,9 @@ public class PlayerInfo : MonoBehaviour
   public int health;
 
   [SerializeField] private string _playerName;
-  
-  private PlayerNameLabel playerNameLabel;
-  private ChatController chatController;
+
+    public  PlayerNameLabel playerNameLabel;
+ public  ChatController chatController;
 
   #region Property
   public string playerName
