@@ -264,12 +264,15 @@ public class TankController : MonoBehaviour
 
     void AlignSpriteToGround()
     {
+        float width = _spriteTransform.localScale.x;
+        float height = _spriteTransform.localScale.y;
+
         //TODO: get sprite transform width/height?
-        Vector2 startPoint = _spriteTransform.position - _spriteTransform.right * 0.5f - _spriteTransform.up * 0.5f;
+        Vector2 startPoint = _spriteTransform.position - _spriteTransform.right * width - _spriteTransform.up * height;
         startPoint.y += MARGIN;
         startPoint.x += MARGIN;
 
-        Vector2 endPoint = _spriteTransform.position + _spriteTransform.right * 0.5f - _spriteTransform.up * 0.5f;
+        Vector2 endPoint = _spriteTransform.position + _spriteTransform.right * width - _spriteTransform.up * height;
         endPoint.y += MARGIN;
         endPoint.x -= MARGIN;
 
