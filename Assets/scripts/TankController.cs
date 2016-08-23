@@ -135,9 +135,25 @@ public class TankController : MonoBehaviour
 
     void FixedUpdate()
     {
-        Debug.Log(isMyTurn);
         if (isMyTurn)
         {
+            _bounds.x = _collider.bounds.min.x;
+            _bounds.y = _collider.bounds.min.y;
+            _bounds.width = _collider.bounds.size.x;
+            _bounds.height = _collider.bounds.size.y;
+
+            //_velocity.x = _velocity.y = 0f;
+            ApplyMovementInput();
+
+            if (_isGrounded == false)
+            {
+                ApplyGravity();
+            }
+
+            CheckGrounded();
+
+            AlignSpriteToGround();
+
             if (!hasFired)
                 cameraController.RepositionCamera(transform.position);
             // If we rotating the canon; 
@@ -146,7 +162,7 @@ public class TankController : MonoBehaviour
                 RotateCanon(GetCanonMovingDirection);
             // If we moving the tank
             if (IsTankMoving && !isCharging)
-                MoveTank();
+                UpdatePosition();
             // If we're charging and it's my turn
             if (IsCharging)
                 ChargingWeapon();
@@ -162,7 +178,7 @@ public class TankController : MonoBehaviour
             }
         }
 
-       
+
     }
 
     void ApplyGravity()
@@ -182,7 +198,6 @@ public class TankController : MonoBehaviour
             .FirstOrDefault(hit => Math.Abs(hit.fraction) > 0.0001f);
 
         float angle = Vector2.Angle(shortestRay.normal, Vector2.up);
-
         _velocity.x = input * WALK_SPEED * Time.fixedDeltaTime * Mathf.Cos(angle * Mathf.Deg2Rad);
     }
 
@@ -219,7 +234,7 @@ public class TankController : MonoBehaviour
                 if (_isOnSlope)
                 {
                     var startPoint = TopLeftBoundsPoint + Vector2.right * _bounds.width / 2;
-                    var middleRay = Physics2D.Raycast(startPoint, Vector2.down, _bounds.height + 0.3f);
+                    var middleRay = Physics2D.Raycast(startPoint, Vector2.down, _bounds.height + 0.3f, LayerMask.GetMask(new string[] { "Ground" }));
                     Debug.DrawLine(_bounds.center, middleRay.point, Color.green);
 
                     if (middleRay.collider != null)
@@ -251,33 +266,36 @@ public class TankController : MonoBehaviour
             float lerpAmount = (float)i / (_rayCount - 1);
             var raycastOrigin = Vector2.Lerp(startPoint, endPoint, lerpAmount);
 
-            var hitInfo = Physics2D.Raycast(raycastOrigin, direction, distance);
+            var hitInfo = Physics2D.Raycast(raycastOrigin, direction, distance, LayerMask.GetMask(new string[] { "Ground" }));
 
             _raycastHits.Add(hitInfo);
+            if (hitInfo.transform != null)
+            {
+                //Debug.Log(hitInfo.transform.name);
+            }
             if (hitInfo.collider != null)
             {
                 Debug.DrawLine(raycastOrigin, hitInfo.point, Color.cyan);
             }
-
         }
     }
 
     void AlignSpriteToGround()
     {
-        float width = _spriteTransform.localScale.x;
-        float height = _spriteTransform.localScale.y;
+        //float width = _spriteTransform.localScale.x;
+        //float height = _spriteTransform.localScale.y;
 
         //TODO: get sprite transform width/height?
-        Vector2 startPoint = _spriteTransform.position - _spriteTransform.right * width - _spriteTransform.up * height;
+        Vector2 startPoint = _spriteTransform.position - _spriteTransform.right * 0.5f - _spriteTransform.up * 0.5f;
         startPoint.y += MARGIN;
         startPoint.x += MARGIN;
 
-        Vector2 endPoint = _spriteTransform.position + _spriteTransform.right * width - _spriteTransform.up * height;
+        Vector2 endPoint = _spriteTransform.position + _spriteTransform.right * 0.5f - _spriteTransform.up * 0.5f;
         endPoint.y += MARGIN;
         endPoint.x -= MARGIN;
 
-        var hitInfoStart = Physics2D.Raycast(startPoint, Vector2.down, 4f);
-        var hitInfoEnd = Physics2D.Raycast(endPoint, Vector2.down, 4f);
+        var hitInfoStart = Physics2D.Raycast(startPoint, Vector2.down, 4f, LayerMask.GetMask(new string[] { "Ground" }));
+        var hitInfoEnd = Physics2D.Raycast(endPoint, Vector2.down, 4f, LayerMask.GetMask(new string[] { "Ground" }));
 
         var hitInfos = new[] { hitInfoStart, hitInfoEnd };
 
@@ -327,24 +345,9 @@ public class TankController : MonoBehaviour
     // We move the tank in the direction in the parameter : -1 to the left; 1 to the right
     void MoveTank()
     {
-        _bounds.x = _collider.bounds.min.x;
-        _bounds.y = _collider.bounds.min.y;
-        _bounds.width = _collider.bounds.size.x;
-        _bounds.height = _collider.bounds.size.y;
 
-        //_velocity.x = _velocity.y = 0f;
-        ApplyMovementInput();
 
-        if (_isGrounded == false)
-        {
-            ApplyGravity();
-        }
-
-        CheckGrounded();
-
-        AlignSpriteToGround();
-
-        UpdatePosition();
+        //();
     }
 
     // if we're holding space bar, we're charging the attack
@@ -424,7 +427,7 @@ public class TankController : MonoBehaviour
     {
         angleLabel.text = ((int)fireAngleDeg).ToString();
     }
-    
+
 
     // Attach the UI ELements to the GameObject
     public void HookUIElements()
