@@ -4,11 +4,12 @@ using System.Collections;
 using UnityEngine.UI;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine.Networking;
 
 [RequireComponent(typeof(BoxCollider2D))]
 [RequireComponent(typeof(Rigidbody2D))]
 [SelectionBase]
-public class TankController : MonoBehaviour
+public class TankController : NetworkBehaviour
 {
     public float rotationSpeed = 1.0f;
     public float chargingSpeed = 0.01f;
@@ -132,9 +133,16 @@ public class TankController : MonoBehaviour
             UpdateFirePowerUI();
         }
     }
+    public override void OnStartLocalPlayer()
+    {
+        base.OnStartLocalPlayer();
+        this._spriteTransform.GetComponent<MeshRenderer>().material.color = Color.blue;
+    }
 
     void FixedUpdate()
     {
+        if (!isLocalPlayer)
+            return;
         if (isMyTurn)
         {
             _bounds.x = _collider.bounds.min.x;
