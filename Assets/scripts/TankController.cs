@@ -176,7 +176,7 @@ public class TankController : NetworkBehaviour
                 ChargingWeapon();
             // If we're done charging and we have a firepower, then we're firing
             if (!IsCharging && firePower > 0.0f)
-                FireWeapon();
+                CmdFireWeapon();
 
             if (hasFired && firedProjectile == null)
             {
@@ -185,8 +185,6 @@ public class TankController : NetworkBehaviour
                 Invoke("NextTurn", nextTurnDelay);
             }
         }
-
-
     }
 
     void ApplyGravity()
@@ -350,14 +348,6 @@ public class TankController : NetworkBehaviour
         UpdateFireAngleUI();
     }
 
-    // We move the tank in the direction in the parameter : -1 to the left; 1 to the right
-    void MoveTank()
-    {
-
-
-        //();
-    }
-
     // if we're holding space bar, we're charging the attack
     void ChargingWeapon()
     {
@@ -367,22 +357,25 @@ public class TankController : NetworkBehaviour
         if (firePower > 1)
         {
             firePower = 1;
-            FireWeapon();
+            CmdFireWeapon();
         }
         UpdateFirePowerUI();
         // this is where we gonna animate and other thing.
     }
 
     // Handle the firing of the projectile
-    void FireWeapon()
+    [Command]
+    void CmdFireWeapon()
     {
+        Debug.Log("CmdFireWeapon()");
+
         firedProjectile = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
         ProjectileController projectileController = firedProjectile.GetComponent<ProjectileController>();
         PlayerInfo attackerInfo = GetComponent<PlayerInfo>();
 
         projectileController.FireProjectile(firePower, fireAngleDeg, attackerInfo);
         firePower = 0.0f;
-        hasFired = true;
+        //hasFired = true;
     }
 
     // Restrict the canon rotation

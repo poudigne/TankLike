@@ -43,8 +43,8 @@ public class ProjectileController : MonoBehaviour
     if (!isFired)
       return;
 
-    var newX = transform.position.x + Mathf.Cos(angleRad) * (firePower / 4);
-    var newY = (transform.position.y + Mathf.Sin(angleRad) * (firePower / 4));
+    var newX = transform.position.x + Mathf.Cos(angleRad) * (firePower / 2);
+    var newY = (transform.position.y + Mathf.Sin(angleRad) * (firePower / 2));
     var newPos = new Vector2(newX, newY);
 
     Vector3 moveDirection = gameObject.transform.position - origPos;
