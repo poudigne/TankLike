@@ -31,6 +31,7 @@ public class TankController : NetworkBehaviour
 
     public CameraController cameraController;
     public GameController gameController;
+    public Transform spawnBulletLocation;
 
     public float startAngle = 0.0f;
     public float endAngle = 0.0f;
@@ -40,7 +41,6 @@ public class TankController : NetworkBehaviour
 
     [SerializeField]
     int _rayCount = 8;
-
 
     [SerializeField]
     float MAXIMUM_CLIMB_ANGLE = 30f;
@@ -78,6 +78,27 @@ public class TankController : NetworkBehaviour
     bool IsTankMoving { get { return Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D); } }
     bool IsCharging { get { return Input.GetKey(KeyCode.Space); } }
     int GetCanonMovingDirection { get { return (Input.GetKey(KeyCode.W) ? -1 : 1); } }
+    Direction TankFacingDirection
+    {
+        get
+        {
+            if (transform.localScale.x < 0)
+                return Direction.Left;
+            else
+                return Direction.Right;
+        }
+    }
+    int GetTankMovingDirection
+    {
+        get
+        {
+            if (Input.GetKey(KeyCode.A))
+                return -1;
+            else if (Input.GetKey(KeyCode.D))
+                return 1;
+            return 1;
+        }
+    }
 
 
     Vector2 TopLeftBoundsPoint
@@ -137,13 +158,14 @@ public class TankController : NetworkBehaviour
     {
         base.OnStartLocalPlayer();
         this._spriteTransform.GetComponent<MeshRenderer>().material.color = Color.blue;
+        transform.gameObject.layer = LayerMask.NameToLayer("friendlyTank");
     }
 
     void FixedUpdate()
     {
         if (!isLocalPlayer)
             return;
-        if (isMyTurn)
+        if (isMyTurn && !hasFired)
         {
             _bounds.x = _collider.bounds.min.x;
             _bounds.y = _collider.bounds.min.y;
@@ -176,7 +198,7 @@ public class TankController : NetworkBehaviour
                 ChargingWeapon();
             // If we're done charging and we have a firepower, then we're firing
             if (!IsCharging && firePower > 0.0f)
-                CmdFireWeapon();
+                FireWeapon();
 
             if (hasFired && firedProjectile == null)
             {
@@ -214,6 +236,19 @@ public class TankController : NetworkBehaviour
             x = _rigidbody.position.x + _velocity.x,
             y = _rigidbody.position.y + _velocity.y
         };
+        var canonTransform = GetCanon();
+        if (TankFacingDirection == Direction.Left && GetTankMovingDirection == 1)
+        {
+            transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
+            transform.rotation = Quaternion.Inverse(transform.rotation);
+            fireAngleDeg = canonTransform.eulerAngles.z;
+        }
+        if (TankFacingDirection == Direction.Right && GetTankMovingDirection == -1)
+        {
+            transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
+            transform.rotation = Quaternion.Inverse(transform.rotation);
+            fireAngleDeg = canonTransform.eulerAngles.z;
+        }
 
         _rigidbody.MovePosition(newPos);
     }
@@ -343,7 +378,7 @@ public class TankController : NetworkBehaviour
         else
             canonTransform.Rotate(Vector3.forward);
 
-        fireAngleDeg = canonTransform.eulerAngles.z;
+        
         RestrictCanonRotation(canonTransform);
         UpdateFireAngleUI();
     }
@@ -357,24 +392,27 @@ public class TankController : NetworkBehaviour
         if (firePower > 1)
         {
             firePower = 1;
-            CmdFireWeapon();
+            FireWeapon();
         }
         UpdateFirePowerUI();
         // this is where we gonna animate and other thing.
     }
 
+    void FireWeapon()
+    {
+        PlayerInfo attackerInfo = GetComponent<PlayerInfo>();
+        CmdFireWeapon(firePower, fireAngleDeg, attackerInfo.playerName);
+        firePower = 0.0f;
+    }
+
     // Handle the firing of the projectile
     [Command]
-    void CmdFireWeapon()
+    void CmdFireWeapon(float pfirePower, float pfireAngleDeg, string pattackerInfo)
     {
-        Debug.Log("CmdFireWeapon()");
-
-        firedProjectile = Instantiate(projectile, transform.position, Quaternion.identity) as GameObject;
+        firedProjectile = Instantiate(projectile, spawnBulletLocation.position, Quaternion.identity) as GameObject;
         ProjectileController projectileController = firedProjectile.GetComponent<ProjectileController>();
-        PlayerInfo attackerInfo = GetComponent<PlayerInfo>();
-
-        projectileController.FireProjectile(firePower, fireAngleDeg, attackerInfo);
-        firePower = 0.0f;
+        projectileController.FireProjectile(pfirePower, pfireAngleDeg);
+        NetworkServer.Spawn(firedProjectile);
         //hasFired = true;
     }
 
@@ -401,7 +439,7 @@ public class TankController : NetworkBehaviour
     // Return the Canon transform
     Transform GetCanon()
     {
-        Transform canonTransform = transform.GetChild(0);
+        Transform canonTransform = transform.FindChild("canon");
         if (canonTransform == null)
             throw new MissingComponentException("The tank is missing a canon. Perhaps you should use the prefabs!");
         return canonTransform;
@@ -429,7 +467,6 @@ public class TankController : NetworkBehaviour
         angleLabel.text = ((int)fireAngleDeg).ToString();
     }
 
-
     // Attach the UI ELements to the GameObject
     public void HookUIElements()
     {
@@ -438,3 +475,5 @@ public class TankController : NetworkBehaviour
         angleLabel = GameObject.FindGameObjectWithTag("angle_value_label").GetComponent<Text>();
     }
 }
+
+
