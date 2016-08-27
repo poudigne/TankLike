@@ -15,6 +15,7 @@ public class TankController : NetworkBehaviour
     public float chargingSpeed = 0.01f;
 
     public float firePower; // the fire power of the shoot in %
+    [SyncVar]
     public float fireAngleDeg;
     public float nextTurnDelay = 2.0f;
     public GameObject firedProjectile;
@@ -40,12 +41,11 @@ public class TankController : NetworkBehaviour
     Text _angleLabel;
     Vector2 _velocity;
     Rect _bounds;
+    Animator animator;
 
     int _rayCount = 8;
 
     public bool _isMyTurn;
-    public bool _hasFired;
-    bool isCharging;
     bool _isGrounded;
     bool _isOnSlope;
 
@@ -91,10 +91,18 @@ public class TankController : NetworkBehaviour
         _rigidbody = GetComponent<Rigidbody2D>();
 
         _spriteTransform = GetComponentsInChildren<Transform>().First(t => t.name == "SpriteGraphics");
+        animator = _spriteTransform.GetComponent<Animator>();
+
         _velocity = Vector2.zero;
         _isMyTurn = true;
-        _hasFired = false;
-        isCharging = false;
+
+        float initAngle = endAngle - startAngle;
+        GetCanon().eulerAngles = new Vector3(0f, 0f, initAngle);
+    }
+
+    internal void SetHasFired(bool v)
+    {
+        animator.SetBool("hasFired", v);
     }
 
     void Start()
@@ -111,7 +119,6 @@ public class TankController : NetworkBehaviour
     public override void OnStartLocalPlayer()
     {
         base.OnStartLocalPlayer();
-        this._spriteTransform.GetComponent<MeshRenderer>().material.color = Color.blue;
         transform.gameObject.layer = LayerMask.NameToLayer("friendlyTank");
     }
 
@@ -128,7 +135,7 @@ public class TankController : NetworkBehaviour
         }
 
 
-        if (_isMyTurn && !_hasFired)
+        if (_isMyTurn /*&& !animator.GetBool("hasFired")*/)
         {
             _bounds.x = _collider.bounds.min.x;
             _bounds.y = _collider.bounds.min.y;
@@ -146,11 +153,11 @@ public class TankController : NetworkBehaviour
 
             AlignSpriteToGround();
 
-            if (!_hasFired)
+            if (!animator.GetBool("hasFired"))
                 cameraController.RepositionCamera(transform.position);
 
             // If we moving the tank
-            if (IsTankMoving && !isCharging)
+            if (IsTankMoving && !animator.GetBool("hasFired"))
                 UpdatePosition();
 
             // If we're charging and it's my turn
@@ -161,10 +168,10 @@ public class TankController : NetworkBehaviour
             if (!IsCharging && firePower > 0.0f)
                 FireWeapon();
 
-            if (_hasFired && firedProjectile == null)
+            if (animator.GetBool("hasFired") && firedProjectile == null)
             {
                 _isMyTurn = false;
-                _hasFired = false;
+                //animator.SetBool("hasFired", false);
                 Invoke("NextTurn", nextTurnDelay);
             }
             ApplyMovementInput();
@@ -347,6 +354,7 @@ public class TankController : NetworkBehaviour
     // if we're holding space bar, we're charging the attack
     void ChargingWeapon()
     {
+        animator.SetBool("isCharging", true);
         // Charging the power from 0 until it release or firePower = 1
         firePower += chargingSpeed;
 
@@ -361,6 +369,8 @@ public class TankController : NetworkBehaviour
 
     void FireWeapon()
     {
+        animator.SetBool("isCharging", false);
+        animator.SetBool("hasFired", true);
         CmdFireWeapon(firePower, fireAngleDeg);
         firePower = 0.0f;
     }
@@ -373,16 +383,14 @@ public class TankController : NetworkBehaviour
         ProjectileController projectileController = firedProjectile.GetComponent<ProjectileController>() as ProjectileController;
         projectileController.firePower = pfirePower;
         projectileController.angleDeg = pfireAngleDeg;
-        //projectileController.angleDeg = GetCanon().eulerAngles.z;
         NetworkServer.Spawn(firedProjectile);
-        //hasFired = true;
+        animator.SetBool("hasFired", false);
     }
 
     // Restrict the canon rotation
     void RestrictCanonRotation(Transform canonTransform)
     {
         canonTransform.eulerAngles = new Vector3(canonTransform.eulerAngles.x, canonTransform.eulerAngles.y, Mathf.Clamp(fireAngleDeg, startAngle, endAngle));
-        Debug.LogWarning("startangle="+ startAngle+"endAngle="+endAngle + "clampRez="+canonTransform.eulerAngles);
     }
 
     Text FindUILabelWithName(string labelname)
@@ -407,7 +415,7 @@ public class TankController : NetworkBehaviour
     // Call the GameController to make next player to play
     void NextTurn()
     {
-        gameController.PlayNext();
+        //gameController.PlayNext();
     }
 
     // Update the UI element related to power (Slider and Label)

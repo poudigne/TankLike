@@ -108,7 +108,7 @@ public class GameController : MonoBehaviour
 
             TankController tankController = currentTank.GetComponent<TankController>();
             tankController._isMyTurn = tank == currentTank;
-            tankController._hasFired = false;
+            tankController.SetHasFired(false);
             tankController.HookUIElements();
         }
     }
@@ -152,7 +152,7 @@ public class GameController : MonoBehaviour
                 GameObject playerTank = Instantiate(tankPrefab, spawnPos, Quaternion.identity) as GameObject;
                 GameObject.DontDestroyOnLoad(playerTank);
                 TankController tankController = playerTank.GetComponent<TankController>();
-                tankController._hasFired = false;
+                tankController.SetHasFired(false);
                 PlayerInfo info = playerTank.GetComponent<PlayerInfo>();
                 info.playerName = inputField.text;
                 playerList[index] = playerTank;

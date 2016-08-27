@@ -19,7 +19,6 @@ public class ProjectileController : NetworkBehaviour
 
     private float baseDamage = 150f;
     private float radius = 0.4f;
-    private bool isFired;
 
     private CameraController camera_controller;
 
@@ -38,7 +37,6 @@ public class ProjectileController : NetworkBehaviour
     //Physics manipulation : Frame-Rate independant
     void FixedUpdate()
     {
-        if (isFired) return;
         float angleRad = (angleDeg + 90) * Mathf.PI / 180;
 
         var newX = transform.position.x + Mathf.Cos(angleRad) * (firePower / 2);
