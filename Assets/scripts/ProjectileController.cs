@@ -12,7 +12,9 @@ public class ProjectileController : NetworkBehaviour
 #endif
     public ParticleSystem explosionAnim;
 
+    [SyncVar]
     public float firePower;
+    [SyncVar]
     public float angleDeg;
 
     private float baseDamage = 150f;
