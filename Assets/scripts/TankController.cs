@@ -41,6 +41,7 @@ public class TankController : NetworkBehaviour
     Text _angleLabel;
     Vector2 _velocity;
     Rect _bounds;
+    
     Animator animator;
 
     int _rayCount = 8;
@@ -61,16 +62,9 @@ public class TankController : NetworkBehaviour
     Vector2 BottomLeftBoundsPoint { get { return _bounds.min + MARGIN * (Vector2.right + Vector2.up); } }
     Vector2 BottomRightBoundsPoint { get { return _bounds.max + Vector2.down * _bounds.height + MARGIN * (Vector2.left + Vector2.up); } }
 
-    Direction TankFacingDirection
-    {
-        get
-        {
-            if (transform.localScale.x < 0)
-                return Direction.Left;
-            else
-                return Direction.Right;
-        }
-    }
+    [SyncVar]
+    Direction TankFacingDirection;
+    
     int GetTankMovingDirection
     {
         get
@@ -109,6 +103,8 @@ public class TankController : NetworkBehaviour
     {
         cameraController = Camera.main.GetComponent<CameraController>();
         InitilializeUIElement();
+
+        TankFacingDirection = Direction.Right; 
 
         if (_isMyTurn)
         {
@@ -211,12 +207,14 @@ public class TankController : NetworkBehaviour
             transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
             transform.rotation = Quaternion.Inverse(transform.rotation);
             fireAngleDeg = canonTransform.eulerAngles.z;
+            TankFacingDirection = Direction.Right;
         }
         if (TankFacingDirection == Direction.Right && GetTankMovingDirection == -1)
         {
             transform.localScale = new Vector3(transform.localScale.x * -1, transform.localScale.y, transform.localScale.z);
             transform.rotation = Quaternion.Inverse(transform.rotation);
             fireAngleDeg = canonTransform.eulerAngles.z;
+            TankFacingDirection = Direction.Left;
         }
 
         _rigidbody.MovePosition(newPos);
@@ -326,7 +324,6 @@ public class TankController : NetworkBehaviour
                 _spriteTransform.up = Vector2.up;
                 break;
         }
-
     }
 
     // Find the UI element for future reference, this is done programaticaly because tank are Created programmaticaly
@@ -383,6 +380,7 @@ public class TankController : NetworkBehaviour
         ProjectileController projectileController = firedProjectile.GetComponent<ProjectileController>() as ProjectileController;
         projectileController.firePower = pfirePower;
         projectileController.angleDeg = pfireAngleDeg;
+        projectileController.shooter = transform;
         NetworkServer.Spawn(firedProjectile);
         animator.SetBool("hasFired", false);
     }

@@ -5,24 +5,23 @@ using UnityEngine.Networking;
 
 public class ProjectileController : NetworkBehaviour
 {
-#if DEBUG
-    public bool isDebug = true;
-#else
-  public bool isDebug = false;
-#endif
     public ParticleSystem explosionAnim;
 
     [SyncVar]
     public float firePower;
     [SyncVar]
     public float angleDeg;
+    [SyncVar]
+    public Transform shooter;
 
     private float baseDamage = 150f;
+    [SerializeField]
     private float radius = 0.4f;
 
     private CameraController camera_controller;
 
-    private Vector3 origPos;
+
+    //private Vector3 /*origPos*/;
 
     void Awake()
     {
@@ -43,7 +42,7 @@ public class ProjectileController : NetworkBehaviour
         var newY = (transform.position.y + Mathf.Sin(angleRad) * (firePower / 2));
         var newPos = new Vector2(newX, newY);
 
-        Vector3 moveDirection = gameObject.transform.position - origPos;
+        Vector3 moveDirection = gameObject.transform.position /*- origPos*/;
         if (moveDirection != Vector3.zero)
         {
             float angle = Mathf.Atan2(moveDirection.y, moveDirection.x) * Mathf.Rad2Deg;
@@ -65,55 +64,42 @@ public class ProjectileController : NetworkBehaviour
 
     private void CalculateDamage()
     {
+        if (!isServer)
+            return;
         Vector2 pos = new Vector2(transform.position.x, transform.position.y);
         Collider2D[] hitTank = Physics2D.OverlapCircleAll(pos, radius);
-
-        if (isDebug) DrawCircle();
 
         foreach (var hit in hitTank)
         {
             if (hit.tag == "Player")
             {
                 Vector2 hitPos = new Vector2(hit.transform.position.x, hit.transform.position.y);
-                float distanceToMiddle = Vector2.Distance(transform.position, (hitPos + hit.offset));
-                PlayerInfo tankPlayerInfo = hit.transform.gameObject.GetComponent<PlayerInfo>();
+                
+                
+                float halfWidth = hit.transform.FindChild("SpriteGraphics").GetComponent<SpriteRenderer>().bounds.size.x / 2;
+                Debug.Log("half width = " + halfWidth);
+                float distanceToMiddle = Vector2.Distance(transform.position, hitPos) - halfWidth;
+                Debug.Log("radius " + radius + " / distance = " + distanceToMiddle + " = " +  radius / distanceToMiddle);
+                Debug.Log("distance = " + distanceToMiddle + " / radius " + radius + " = " + distanceToMiddle / radius);
+
                 float percentage = 1 - (distanceToMiddle / radius);
                 percentage = percentage < 0 ? 0 : percentage;
-                if (percentage == 0)
-                {
-                    //chatController.AddNewLine(string.Empty, attacker_name + " miss ");
-                    return;
-                }
+
+                Debug.Log("BaseDamage = " + baseDamage + " Percentage = " + percentage);
+                PlayerInfo tankPlayerInfo = hit.transform.gameObject.GetComponent<PlayerInfo>();
                 ApplyDamage(baseDamage * percentage, tankPlayerInfo);
             }
         }
+        Destroy(gameObject);
     }
 
     private void ApplyDamage(float damageAmount, PlayerInfo defenderInfo)
     {
-        //defenderInfo.DoDamage(damageAmount, attacker_name);
-    }
+        if (!isServer)
+            return;
 
-    void DrawCircle()
-    {
-        float theta_scale = 0.5f; //Set lower to add more pointsS
-        int size = Mathf.CeilToInt((2 * Mathf.PI) / theta_scale); //Total number of points in circle.
-
-        LineRenderer lineRenderer = gameObject.AddComponent<LineRenderer>();
-        lineRenderer.material = new Material(Shader.Find("Particles/Additive"));
-        lineRenderer.SetColors(Color.red, Color.red);
-        lineRenderer.SetWidth(0.25f, 0.25f);
-        lineRenderer.SetVertexCount(size);
-        var r = radius;
-        int i = 0;
-        for (float theta = 0; theta < 2 * Mathf.PI; theta += 0.1f)
-        {
-            var x = r * Mathf.Cos(theta) + transform.position.x;
-            var y = r * Mathf.Sin(theta) + transform.position.y;
-
-            Vector3 pos = new Vector3(x, y, 1);
-            lineRenderer.SetPosition(i, pos);
-            i++;
-        }
+        // Notify
+        defenderInfo.DoDamage(damageAmount);
+        Transform tank = transform.parent;
     }
 }

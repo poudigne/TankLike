@@ -12,7 +12,6 @@ public class PlayerInfo : NetworkBehaviour
 
     public PlayerNameLabel playerNameLabel;
 
-    #region Property
     public string playerName
     {
         get { return _playerName; }
@@ -23,10 +22,6 @@ public class PlayerInfo : NetworkBehaviour
                 playerNameLabel.SetName(_playerName);
         }
     }
-    #endregion
-
-
-    #region Unity Engine
 
     void Start()
     {
@@ -36,22 +31,19 @@ public class PlayerInfo : NetworkBehaviour
         if (playerNameLabel == null)
             Debug.LogError("No \"PlayerNameLabel\" component found. Please add one.");
     }
-    #endregion
 
-    public void DoDamage(float damageAmount, string player_name)
+    public void DoDamage(float damageAmount)
     {
         if (!isServer)
         {
             return;
         }
+        Debug.Log("Player took damage : " + damageAmount + "HP");
         int damageInt = (int)damageAmount;
         health -= damageInt;
-        ChatController chatController = FindObjectOfType<ChatController>();
-        chatController.AddNewLine(string.Empty, player_name + " attacked " + playerName + " for " + damageInt + " damage");
         if (health <= 0)
         {
             Die();
-            chatController.AddNewLine(string.Empty, player_name + " killed " + playerName);
         }
     }
 
