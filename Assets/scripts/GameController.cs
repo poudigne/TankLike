@@ -6,156 +6,160 @@ using UnityEngine;
 using Objects.Interfaces;
 using Objects.Implementations;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class GameController : MonoBehaviour
 {
-  public Transform[] rowEntryArray;
+    public Transform[] rowEntryArray;
 
-  [SerializeField] private GameObject[] playerList;
-  [SerializeField] private GameObject tankPrefab;
-  [SerializeField] private LevelManager levelManager;
+    [SerializeField]
+    private GameObject[] playerList;
+    [SerializeField]
+    private GameObject tankPrefab;
 
-  [SerializeField] private int currentPlayerIndex;
+    [SerializeField]
+    private int currentPlayerIndex;
 
-  [SerializeField] private float spawnY = 2.0f;
-  [SerializeField] private float minSpawnX = -4.6f;
-  [SerializeField] private float maxSpawnX = 4.6f;
-  
-  private GameController instance = null;
+    [SerializeField]
+    private float spawnY = 2.0f;
+    [SerializeField]
+    private float minSpawnX = -4.6f;
+    [SerializeField]
+    private float maxSpawnX = 4.6f;
 
-  private bool playerSpawned = false;
+    private GameController instance = null;
 
-  private const string GAME_SCENE_NAME = "Game";
-  private const string PLAYER_SCENE_NAME = "PlayerCreation";
+    private bool playerSpawned = false;
+
+    private const string GAME_SCENE_NAME = "Game";
+    private const string PLAYER_SCENE_NAME = "PlayerCreation";
 
 
-  #region Unity Engine
+    #region Unity Engine
 
-  void Awake()
-  {
-    playerList = new GameObject[rowEntryArray.Length];
-
-    if (instance != null)
+    void Awake()
     {
-      Destroy(gameObject);
-      print("Duplicate GameController self-destructing!");
+        playerList = new GameObject[rowEntryArray.Length];
+
+        if (instance != null)
+        {
+            Destroy(gameObject);
+            print("Duplicate GameController self-destructing!");
+        }
+        else
+        {
+            instance = this;
+            GameObject.DontDestroyOnLoad(gameObject);
+        }
+        if (SceneManager.GetActiveScene().name == PLAYER_SCENE_NAME)
+            AwakePlayerScene();
     }
-    else
+
+    void Update()
     {
-      instance = this;
-      GameObject.DontDestroyOnLoad(gameObject);
+        if (SceneManager.GetActiveScene().name == GAME_SCENE_NAME && !playerSpawned)
+        {
+            playerSpawned = true;
+            AwakeGameScene();
+        }
     }
-    if (Application.loadedLevelName == PLAYER_SCENE_NAME)
-      AwakePlayerScene();
-  }
 
-  void Update()
-  {
-    if (Application.loadedLevelName == GAME_SCENE_NAME && !playerSpawned)
+    // Handler for when the Game scene awake
+    private void AwakeGameScene()
     {
-      playerSpawned = true;
-      AwakeGameScene();
+        playerList = ShufflePlayer(playerList);
+        PlayNext();
     }
-  }
 
-  // Handler for when the Game scene awake
-  private void AwakeGameScene()
-  {
-    playerList = ShufflePlayer(playerList);
-    PlayNext();
-  }
-
-  // Handler for when the player creationg / selectionne scene Awake
-  private void AwakePlayerScene()
-  {
-
-  }
-
-  // Set the next player in turn to play
-  public void PlayNext()
-  {
-    bool foundNext = false;
-    while (!foundNext)
+    // Handler for when the player creationg / selectionne scene Awake
+    private void AwakePlayerScene()
     {
-      if (currentPlayerIndex >= playerList.Length -1 )
-        currentPlayerIndex = 0;
-      else
-        currentPlayerIndex++;
-      GameObject tank = playerList[currentPlayerIndex];
-      Debug.Log("PlayerIndex " + currentPlayerIndex);
-      if (tank != null)
-      {
-        PlayerInfo playerInfo = tank.GetComponent<PlayerInfo>();
-        Debug.Log("Tank has been found. " + playerInfo.playerName + "'s turn. ");
-        SetNewTurn(tank);
-        foundNext = true;
-      }
-    }
-  }
 
-  // Change the status of playability for each tank in order to only have 1 player wich is his turn
-  private void SetNewTurn(GameObject tank)
-  {
-    foreach (var currentTank in playerList)
+    }
+
+    // Set the next player in turn to play
+    public void PlayNext()
     {
-      if (currentTank == null) continue;
-
-      TankController tankController = currentTank.GetComponent<TankController>();
-      tankController.isMyTurn = tank == currentTank;
-      tankController.hasFired = false;
-      tankController.HookUIElements();
+        bool foundNext = false;
+        while (!foundNext)
+        {
+            if (currentPlayerIndex >= playerList.Length - 1)
+                currentPlayerIndex = 0;
+            else
+                currentPlayerIndex++;
+            GameObject tank = playerList[currentPlayerIndex];
+            Debug.Log("PlayerIndex " + currentPlayerIndex);
+            if (tank != null)
+            {
+                PlayerInfo playerInfo = tank.GetComponent<PlayerInfo>();
+                Debug.Log("Tank has been found. " + playerInfo.playerName + "'s turn. ");
+                SetNewTurn(tank);
+                foundNext = true;
+            }
+        }
     }
-  }
 
-  #endregion
-
-  // Shuffle the player play order RANDOMLY because... it's ... shuffle... you know.
-  public static GameObject[] ShufflePlayer(GameObject[] arr)
-  {
-    List<KeyValuePair<int, GameObject>> list = arr.Select(s => new KeyValuePair<int, GameObject>(Random.Range(0, 100), s)).ToList();
-    var sorted = from item in list
-                 orderby item.Key
-                 select item;
-    GameObject[] result = new GameObject[arr.Length];
-    int index = 0;
-    foreach (KeyValuePair<int, GameObject> pair in sorted)
+    // Change the status of playability for each tank in order to only have 1 player wich is his turn
+    private void SetNewTurn(GameObject tank)
     {
-      result[index] = pair.Value;
-      index++;
+        foreach (var currentTank in playerList)
+        {
+            if (currentTank == null) continue;
+
+            TankController tankController = currentTank.GetComponent<TankController>();
+            tankController._isMyTurn = tank == currentTank;
+            tankController._hasFired = false;
+            tankController.HookUIElements();
+        }
     }
-    return result;
-  }
 
-  // Create the array of tank that will fight in the field.
-  public void Play()
-  {
-    if (Application.loadedLevelName != PLAYER_SCENE_NAME)
-      return;
+    #endregion
 
-    int index = 0;
-
-    foreach (var row in rowEntryArray)
+    // Shuffle the player play order RANDOMLY because... it's ... shuffle... you know.
+    public static GameObject[] ShufflePlayer(GameObject[] arr)
     {
-      Toggle toggle = row.GetComponentInChildren<Toggle>();
-      InputField inputField = row.GetComponentInChildren<InputField>();
-      if (toggle.isOn)
-      {
-        
-        float randomXPos = Random.Range(minSpawnX, maxSpawnX);
-        Vector3 spawnPos = new Vector3(randomXPos, spawnY, 0.0f);
-        GameObject playerTank = Instantiate(tankPrefab, spawnPos, Quaternion.identity) as GameObject;
-        GameObject.DontDestroyOnLoad(playerTank);
-        TankController tankController = playerTank.GetComponent<TankController>();
-        tankController.isMyTurn = false;
-        PlayerInfo info = playerTank.GetComponent<PlayerInfo>();
-        info.playerName = inputField.text;
-        playerList[index] = playerTank;
-
-        index++;
-      }
+        List<KeyValuePair<int, GameObject>> list = arr.Select(s => new KeyValuePair<int, GameObject>(Random.Range(0, 100), s)).ToList();
+        var sorted = from item in list
+                     orderby item.Key
+                     select item;
+        GameObject[] result = new GameObject[arr.Length];
+        int index = 0;
+        foreach (KeyValuePair<int, GameObject> pair in sorted)
+        {
+            result[index] = pair.Value;
+            index++;
+        }
+        return result;
     }
-    levelManager.LoadLevel("Game");
 
-    
-  }
+    // Create the array of tank that will fight in the field.
+    public void Play()
+    {
+        if (SceneManager.GetActiveScene().name != PLAYER_SCENE_NAME)
+            return;
+
+        int index = 0;
+
+        foreach (var row in rowEntryArray)
+        {
+            Toggle toggle = row.GetComponentInChildren<Toggle>();
+            InputField inputField = row.GetComponentInChildren<InputField>();
+            if (toggle.isOn)
+            {
+
+                float randomXPos = Random.Range(minSpawnX, maxSpawnX);
+                Vector3 spawnPos = new Vector3(randomXPos, spawnY, 0.0f);
+                GameObject playerTank = Instantiate(tankPrefab, spawnPos, Quaternion.identity) as GameObject;
+                GameObject.DontDestroyOnLoad(playerTank);
+                TankController tankController = playerTank.GetComponent<TankController>();
+                tankController._hasFired = false;
+                PlayerInfo info = playerTank.GetComponent<PlayerInfo>();
+                info.playerName = inputField.text;
+                playerList[index] = playerTank;
+
+                index++;
+            }
+        }
+        SceneManager.LoadScene("Game");
+    }
 }

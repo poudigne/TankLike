@@ -27,11 +27,10 @@ public class ArcUI : MonoBehaviour {
         lineRenderer = GetComponent<LineRenderer>();
         lineRenderer.SetVertexCount(segments);
         lineRenderer.SetColors(Color.red, Color.red);
-        DrawArc();
 	}
 	
 	// Update is called once per frame
-	void DrawArc()
+	void LateUpdate()
     {
         Vector3[] arcPoints = new Vector3[segments];
         float angle = startAngle;
@@ -41,7 +40,7 @@ public class ArcUI : MonoBehaviour {
             float x = Mathf.Sin(Mathf.Deg2Rad * angle) * radius;
             float y = Mathf.Cos(Mathf.Deg2Rad * angle) * radius;
 
-            arcPoints[i] = new Vector3((transform.position.x + x) + offsetX, (transform.position.y + y) + offsetY, 0.25f);
+            arcPoints[i] = new Vector3((tank.transform.position.x + x) + offsetX, (tank.transform.position.y + y) + offsetY, 0.25f);
 
             angle += (arcLength / segments);
         }

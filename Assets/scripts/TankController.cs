@@ -14,16 +14,6 @@ public class TankController : NetworkBehaviour
     public float rotationSpeed = 1.0f;
     public float chargingSpeed = 0.01f;
 
-    public bool isMyTurn = true;
-    public bool hasFired = false;
-
-    public GameObject projectile;
-    public Slider powerSlider;
-    public Text powerLabel;
-    public Text angleLabel;
-
-    public bool isCharging = false;
-
     public float firePower; // the fire power of the shoot in %
     public float fireAngleDeg;
     public float nextTurnDelay = 2.0f;
@@ -32,52 +22,45 @@ public class TankController : NetworkBehaviour
     public CameraController cameraController;
     public GameController gameController;
     public Transform spawnBulletLocation;
+    public GameObject projectile;
 
     public float startAngle = 0.0f;
     public float endAngle = 0.0f;
 
-    [SerializeField]
-    Vector2 _velocity = Vector2.zero;
-
-    [SerializeField]
-    int _rayCount = 8;
-
-    [SerializeField]
-    float MAXIMUM_CLIMB_ANGLE = 30f;
-
     const float WALK_SPEED = 6f;
     const float GRAVITY = 4f;
     const float TERMINAL_VELOCITY = 12f;
-
-    float GroundCheckDelta
-    {
-        get { return _bounds.height + 0.5f; }
-    }
-
     const float MARGIN = 0f;
 
     Transform _spriteTransform;
     BoxCollider2D _collider;
     Rigidbody2D _rigidbody;
+    Slider _powerSlider;
+    Text _powerLabel;
+    Text _angleLabel;
+    Vector2 _velocity;
+    Rect _bounds;
 
-    float _xMax = float.MaxValue;
-    float _yMax = float.MaxValue; //might not need since there is no vertical movement
-    float _yMin = float.MinValue;
-    float _xMin = float.MinValue;
+    int _rayCount = 8;
 
-    [SerializeField]
+    public bool _isMyTurn;
+    public bool _hasFired;
+    bool isCharging;
     bool _isGrounded;
-    [SerializeField]
     bool _isOnSlope;
 
     readonly List<RaycastHit2D> _raycastHits = new List<RaycastHit2D>();
 
-    Rect _bounds;
-
     bool IsCanonMoving { get { return Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.S); } }
     bool IsTankMoving { get { return Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.D); } }
     bool IsCharging { get { return Input.GetKey(KeyCode.Space); } }
+    float GroundCheckDelta { get { return _bounds.height + 0.5f; } }
     int GetCanonMovingDirection { get { return (Input.GetKey(KeyCode.W) ? -1 : 1); } }
+    Vector2 TopLeftBoundsPoint { get { return _bounds.min + Vector2.up * _bounds.height + MARGIN * (Vector2.right + Vector2.down); } }
+    Vector2 TopRightBoundsPoint { get { return _bounds.max + MARGIN * (Vector2.left + Vector2.down); } }
+    Vector2 BottomLeftBoundsPoint { get { return _bounds.min + MARGIN * (Vector2.right + Vector2.up); } }
+    Vector2 BottomRightBoundsPoint { get { return _bounds.max + Vector2.down * _bounds.height + MARGIN * (Vector2.left + Vector2.up); } }
+
     Direction TankFacingDirection
     {
         get
@@ -100,39 +83,6 @@ public class TankController : NetworkBehaviour
         }
     }
 
-
-    Vector2 TopLeftBoundsPoint
-    {
-        get
-        {
-            return _bounds.min + Vector2.up * _bounds.height + MARGIN * (Vector2.right + Vector2.down);
-        }
-    }
-
-    Vector2 TopRightBoundsPoint
-    {
-        get
-        {
-            return _bounds.max + MARGIN * (Vector2.left + Vector2.down);
-        }
-    }
-
-    Vector2 BottomLeftBoundsPoint
-    {
-        get
-        {
-            return _bounds.min + +MARGIN * (Vector2.right + Vector2.up);
-        }
-    }
-
-    Vector2 BottomRightBoundsPoint
-    {
-        get
-        {
-            return _bounds.max + Vector2.down * _bounds.height + MARGIN * (Vector2.left + Vector2.up);
-        }
-    }
-
     void Awake()
     {
         gameController = FindObjectOfType<GameController>();
@@ -141,6 +91,10 @@ public class TankController : NetworkBehaviour
         _rigidbody = GetComponent<Rigidbody2D>();
 
         _spriteTransform = GetComponentsInChildren<Transform>().First(t => t.name == "SpriteGraphics");
+        _velocity = Vector2.zero;
+        _isMyTurn = true;
+        _hasFired = false;
+        isCharging = false;
     }
 
     void Start()
@@ -148,7 +102,7 @@ public class TankController : NetworkBehaviour
         cameraController = Camera.main.GetComponent<CameraController>();
         InitilializeUIElement();
 
-        if (isMyTurn)
+        if (_isMyTurn)
         {
             UpdateFireAngleUI();
             UpdateFirePowerUI();
@@ -161,11 +115,20 @@ public class TankController : NetworkBehaviour
         transform.gameObject.layer = LayerMask.NameToLayer("friendlyTank");
     }
 
-    void FixedUpdate()
+    void Update()
     {
         if (!isLocalPlayer)
             return;
-        if (isMyTurn && !hasFired)
+
+        // If we rotating the canon; 
+        // I dont validate the isMyTurn boolean cause we want to let the player to move the canon around
+        if (IsCanonMoving)
+        {
+            RotateCanon(GetCanonMovingDirection);
+        }
+
+
+        if (_isMyTurn && !_hasFired)
         {
             _bounds.x = _collider.bounds.min.x;
             _bounds.y = _collider.bounds.min.y;
@@ -173,7 +136,6 @@ public class TankController : NetworkBehaviour
             _bounds.height = _collider.bounds.size.y;
 
             //_velocity.x = _velocity.y = 0f;
-            ApplyMovementInput();
 
             if (_isGrounded == false)
             {
@@ -184,28 +146,28 @@ public class TankController : NetworkBehaviour
 
             AlignSpriteToGround();
 
-            if (!hasFired)
+            if (!_hasFired)
                 cameraController.RepositionCamera(transform.position);
-            // If we rotating the canon; 
-            // I dont validate the isMyTurn boolean cause we want to let the player to move the canon around
-            if (IsCanonMoving)
-                RotateCanon(GetCanonMovingDirection);
+
             // If we moving the tank
             if (IsTankMoving && !isCharging)
                 UpdatePosition();
+
             // If we're charging and it's my turn
             if (IsCharging)
                 ChargingWeapon();
+
             // If we're done charging and we have a firepower, then we're firing
             if (!IsCharging && firePower > 0.0f)
                 FireWeapon();
 
-            if (hasFired && firedProjectile == null)
+            if (_hasFired && firedProjectile == null)
             {
-                isMyTurn = false;
-                hasFired = false;
+                _isMyTurn = false;
+                _hasFired = false;
                 Invoke("NextTurn", nextTurnDelay);
             }
+            ApplyMovementInput();
         }
     }
 
@@ -363,9 +325,9 @@ public class TankController : NetworkBehaviour
     // Find the UI element for future reference, this is done programaticaly because tank are Created programmaticaly
     void InitilializeUIElement()
     {
-        powerSlider = GameObject.FindObjectOfType<Slider>();
-        angleLabel = FindUILabelWithName("angle_value");
-        powerLabel = FindUILabelWithName("power_value");
+        _powerSlider = GameObject.FindObjectOfType<Slider>();
+        _angleLabel = FindUILabelWithName("angle_value");
+        _powerLabel = FindUILabelWithName("power_value");
     }
 
     // We rotate the canon in the direction in the parameter : -1 to the left; 1 to the right
@@ -377,16 +339,15 @@ public class TankController : NetworkBehaviour
             canonTransform.Rotate(Vector3.back);
         else
             canonTransform.Rotate(Vector3.forward);
-
         
-        RestrictCanonRotation(canonTransform);
+        //RestrictCanonRotation(canonTransform);
         UpdateFireAngleUI();
     }
 
     // if we're holding space bar, we're charging the attack
     void ChargingWeapon()
     {
-        // Charging the power from 0 until it release or firePower = 100
+        // Charging the power from 0 until it release or firePower = 1
         firePower += chargingSpeed;
 
         if (firePower > 1)
@@ -400,18 +361,19 @@ public class TankController : NetworkBehaviour
 
     void FireWeapon()
     {
-        PlayerInfo attackerInfo = GetComponent<PlayerInfo>();
-        CmdFireWeapon(firePower, fireAngleDeg, attackerInfo.playerName);
+        CmdFireWeapon(firePower, fireAngleDeg);
         firePower = 0.0f;
     }
 
     // Handle the firing of the projectile
     [Command]
-    void CmdFireWeapon(float pfirePower, float pfireAngleDeg, string pattackerInfo)
+    void CmdFireWeapon(float pfirePower, float pfireAngleDeg)
     {
-        firedProjectile = Instantiate(projectile, spawnBulletLocation.position, Quaternion.identity) as GameObject;
-        ProjectileController projectileController = firedProjectile.GetComponent<ProjectileController>();
-        projectileController.FireProjectile(pfirePower, pfireAngleDeg);
+        firedProjectile = Instantiate(projectile, spawnBulletLocation.position, Quaternion.Euler(GetCanon().eulerAngles)) as GameObject;
+        ProjectileController projectileController = firedProjectile.GetComponent<ProjectileController>() as ProjectileController;
+        projectileController.firePower = pfirePower;
+        projectileController.angleDeg = pfireAngleDeg;
+        //projectileController.angleDeg = GetCanon().eulerAngles.z;
         NetworkServer.Spawn(firedProjectile);
         //hasFired = true;
     }
@@ -420,10 +382,7 @@ public class TankController : NetworkBehaviour
     void RestrictCanonRotation(Transform canonTransform)
     {
         canonTransform.eulerAngles = new Vector3(canonTransform.eulerAngles.x, canonTransform.eulerAngles.y, Mathf.Clamp(fireAngleDeg, startAngle, endAngle));
-        //if (fireAngleDeg > startAngle && fireAngleDeg < endAngle)
-        //    canonTransform.eulerAngles = new Vector3(canonTransform.eulerAngles.x, canonTransform.eulerAngles.y, 90);
-        //else if (fireAngleDeg < 270 && fireAngleDeg > 90)
-        //    canonTransform.eulerAngles = new Vector3(canonTransform.eulerAngles.x, canonTransform.eulerAngles.y, 270);
+        Debug.LogWarning("startangle="+ startAngle+"endAngle="+endAngle + "clampRez="+canonTransform.eulerAngles);
     }
 
     Text FindUILabelWithName(string labelname)
@@ -448,8 +407,6 @@ public class TankController : NetworkBehaviour
     // Call the GameController to make next player to play
     void NextTurn()
     {
-        Debug.Log("NEXT TURN CALLED");
-
         gameController.PlayNext();
     }
 
@@ -457,22 +414,22 @@ public class TankController : NetworkBehaviour
     void UpdateFirePowerUI()
     {
         float firePowerPercent = firePower * 100;
-        powerSlider.value = firePowerPercent;
-        powerLabel.text = firePowerPercent.ToString();
+        _powerSlider.value = firePowerPercent;
+        _powerLabel.text = firePowerPercent.ToString();
     }
 
     // Update the UI element related to angle (Label only for now)
     void UpdateFireAngleUI()
     {
-        angleLabel.text = ((int)fireAngleDeg).ToString();
+        _angleLabel.text = ((int)fireAngleDeg).ToString();
     }
 
     // Attach the UI ELements to the GameObject
     public void HookUIElements()
     {
-        powerSlider = GameObject.FindGameObjectWithTag("power_value_slider").GetComponent<Slider>();
-        powerLabel = GameObject.FindGameObjectWithTag("power_value_label").GetComponent<Text>();
-        angleLabel = GameObject.FindGameObjectWithTag("angle_value_label").GetComponent<Text>();
+        _powerSlider = GameObject.FindGameObjectWithTag("power_value_slider").GetComponent<Slider>();
+        _powerLabel = GameObject.FindGameObjectWithTag("power_value_label").GetComponent<Text>();
+        _angleLabel = GameObject.FindGameObjectWithTag("angle_value_label").GetComponent<Text>();
     }
 }
 

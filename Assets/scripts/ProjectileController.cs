@@ -1,8 +1,9 @@
 ﻿using System;
 using UnityEngine;
 using System.Collections;
+using UnityEngine.Networking;
 
-public class ProjectileController : MonoBehaviour
+public class ProjectileController : NetworkBehaviour
 {
 #if DEBUG
     public bool isDebug = true;
@@ -11,29 +12,20 @@ public class ProjectileController : MonoBehaviour
 #endif
     public ParticleSystem explosionAnim;
 
-    [SerializeField]
+    public float firePower;
+    public float angleDeg;
+
+    private float baseDamage = 150f;
+    private float radius = 0.4f;
     private bool isFired;
 
-    [SerializeField]
-    private float firePower;
-    [SerializeField]
-    private float angleRad;
-    [SerializeField]
-    private float baseDamage = 150f;
-    [SerializeField]
-    private float radius = 0.4f;
-    private string attacker_name;
-
     private CameraController camera_controller;
-    private ChatController chatController;
 
     private Vector3 origPos;
 
-    #region Unity Engine
     void Awake()
     {
         camera_controller = Camera.main.GetComponent<CameraController>();
-        chatController = FindObjectOfType<ChatController>();
     }
 
     void Update()
@@ -41,11 +33,11 @@ public class ProjectileController : MonoBehaviour
         camera_controller.RepositionCamera(transform.position, false);
     }
 
-    // Physics manipulation : Frame-Rate independant
+    //Physics manipulation : Frame-Rate independant
     void FixedUpdate()
     {
-        if (!isFired)
-            return;
+        if (isFired) return;
+        float angleRad = (angleDeg + 90) * Mathf.PI / 180;
 
         var newX = transform.position.x + Mathf.Cos(angleRad) * (firePower / 2);
         var newY = (transform.position.y + Mathf.Sin(angleRad) * (firePower / 2));
@@ -60,6 +52,7 @@ public class ProjectileController : MonoBehaviour
 
         transform.position = newPos;
     }
+
     void OnCollisionEnter2D(Collision2D other)
     {
         GameObject explosion = Instantiate(explosionAnim, gameObject.transform.position, Quaternion.identity) as GameObject;
@@ -68,15 +61,6 @@ public class ProjectileController : MonoBehaviour
 
         CalculateDamage();
         Destroy(gameObject);
-    }
-    #endregion
-    // Sets the flags and value to launch the projectile
-    public void FireProjectile(float power, float launchAngle)
-    {
-        isFired = true;
-        firePower = power;
-        angleRad = (launchAngle + 90) * Mathf.PI / 180;
-        origPos = transform.position;
     }
 
     private void CalculateDamage()
@@ -97,7 +81,7 @@ public class ProjectileController : MonoBehaviour
                 percentage = percentage < 0 ? 0 : percentage;
                 if (percentage == 0)
                 {
-                    chatController.AddNewLine(string.Empty, attacker_name + " miss ");
+                    //chatController.AddNewLine(string.Empty, attacker_name + " miss ");
                     return;
                 }
                 ApplyDamage(baseDamage * percentage, tankPlayerInfo);
@@ -107,19 +91,18 @@ public class ProjectileController : MonoBehaviour
 
     private void ApplyDamage(float damageAmount, PlayerInfo defenderInfo)
     {
-        defenderInfo.DoDamage(damageAmount, attacker_name);
+        //defenderInfo.DoDamage(damageAmount, attacker_name);
     }
 
-    #region Debug function
     void DrawCircle()
     {
-        float theta_scale = 0.1f;             //Set lower to add more pointsS
+        float theta_scale = 0.5f; //Set lower to add more pointsS
         int size = Mathf.CeilToInt((2 * Mathf.PI) / theta_scale); //Total number of points in circle.
 
         LineRenderer lineRenderer = gameObject.AddComponent<LineRenderer>();
         lineRenderer.material = new Material(Shader.Find("Particles/Additive"));
         lineRenderer.SetColors(Color.red, Color.red);
-        lineRenderer.SetWidth(0.025f, 0.025f);
+        lineRenderer.SetWidth(0.25f, 0.25f);
         lineRenderer.SetVertexCount(size);
         var r = radius;
         int i = 0;
@@ -133,5 +116,4 @@ public class ProjectileController : MonoBehaviour
             i++;
         }
     }
-    #endregion
 }

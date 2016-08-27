@@ -8,11 +8,9 @@ public class PlayerInfo : NetworkBehaviour
     [SyncVar]
     public int health;
 
-    [SerializeField]
     private string _playerName;
 
     public PlayerNameLabel playerNameLabel;
-    public ChatController chatController;
 
     #region Property
     public string playerName
@@ -32,9 +30,6 @@ public class PlayerInfo : NetworkBehaviour
 
     void Start()
     {
-
-        if (chatController == null)
-            Debug.LogError("ChatController not found. Please create one.");
         health = maxHealth;
         playerNameLabel = GetComponent<PlayerNameLabel>();
         playerName = _playerName;
