@@ -21,7 +21,7 @@ public class TankController : NetworkBehaviour
     public GameObject firedProjectile;
 
     public CameraController cameraController;
-    public GameController gameController;
+    //public GameController gameController;
     public Transform spawnBulletLocation;
     public GameObject projectile;
 
@@ -64,7 +64,9 @@ public class TankController : NetworkBehaviour
 
     [SyncVar]
     Direction TankFacingDirection;
-    
+    [SyncVar]
+    public Color color;
+
     int GetTankMovingDirection
     {
         get
@@ -79,7 +81,7 @@ public class TankController : NetworkBehaviour
 
     void Awake()
     {
-        gameController = FindObjectOfType<GameController>();
+        //gameController = FindObjectOfType<GameController>();
 
         _collider = GetComponent<BoxCollider2D>();
         _rigidbody = GetComponent<Rigidbody2D>();
@@ -103,6 +105,10 @@ public class TankController : NetworkBehaviour
     {
         cameraController = Camera.main.GetComponent<CameraController>();
         InitilializeUIElement();
+
+        Renderer[] rends = GetComponentsInChildren<Renderer>();
+        foreach (Renderer r in rends)
+            r.material.color = color;
 
         TankFacingDirection = Direction.Right; 
 
@@ -149,7 +155,7 @@ public class TankController : NetworkBehaviour
 
             AlignSpriteToGround();
 
-            if (!animator.GetBool("hasFired"))
+            //if (!animator.GetBool("hasFired"))
                 cameraController.RepositionCamera(transform.position);
 
             // If we moving the tank

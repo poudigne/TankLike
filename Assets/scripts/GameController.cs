@@ -3,44 +3,30 @@ using System.Linq;
 using System.Text;
 using UnityEngine;
 
-using Objects.Interfaces;
-using Objects.Implementations;
-using UnityEngine.UI;
+using UnityEngine.Networking;
+using System;
 using UnityEngine.SceneManagement;
 
-public class GameController : MonoBehaviour
+public class GameController : NetworkBehaviour
 {
-    public Transform[] rowEntryArray;
 
-    [SerializeField]
-    private GameObject[] playerList;
-    [SerializeField]
+    private List<GameObject> playerList;
+    private List<GamePlayer> playerList2;
     private GameObject tankPrefab;
 
     [SerializeField]
     private int currentPlayerIndex;
 
-    [SerializeField]
-    private float spawnY = 2.0f;
-    [SerializeField]
-    private float minSpawnX = -4.6f;
-    [SerializeField]
-    private float maxSpawnX = 4.6f;
-
     private GameController instance = null;
-
-    private bool playerSpawned = false;
 
     private const string GAME_SCENE_NAME = "Game";
     private const string PLAYER_SCENE_NAME = "PlayerCreation";
+    const int MAX_PLAYER = 8;
 
-
-    #region Unity Engine
 
     void Awake()
     {
-        playerList = new GameObject[rowEntryArray.Length];
-
+        playerList = new List<GameObject>();
         if (instance != null)
         {
             Destroy(gameObject);
@@ -51,39 +37,32 @@ public class GameController : MonoBehaviour
             instance = this;
             GameObject.DontDestroyOnLoad(gameObject);
         }
-        if (SceneManager.GetActiveScene().name == PLAYER_SCENE_NAME)
-            AwakePlayerScene();
     }
 
-    void Update()
+    private int? GetNextAvailableSlot()
     {
-        if (SceneManager.GetActiveScene().name == GAME_SCENE_NAME && !playerSpawned)
+        if (!isServer)
+            return null;
+
+        for (int i = 0; i < playerList.Count(); i++)
         {
-            playerSpawned = true;
-            AwakeGameScene();
+            if (playerList[i] == null)
+                return i;
         }
+        Debug.LogWarning("Server is full !");
+        return null;
     }
 
-    // Handler for when the Game scene awake
-    private void AwakeGameScene()
-    {
-        playerList = ShufflePlayer(playerList);
-        PlayNext();
-    }
-
-    // Handler for when the player creationg / selectionne scene Awake
-    private void AwakePlayerScene()
-    {
-
-    }
 
     // Set the next player in turn to play
     public void PlayNext()
     {
+        if (!isServer)
+            return;
         bool foundNext = false;
         while (!foundNext)
         {
-            if (currentPlayerIndex >= playerList.Length - 1)
+            if (currentPlayerIndex >= playerList.Count - 1)
                 currentPlayerIndex = 0;
             else
                 currentPlayerIndex++;
@@ -102,6 +81,9 @@ public class GameController : MonoBehaviour
     // Change the status of playability for each tank in order to only have 1 player wich is his turn
     private void SetNewTurn(GameObject tank)
     {
+        if (!isServer)
+            return;
+
         foreach (var currentTank in playerList)
         {
             if (currentTank == null) continue;
@@ -113,12 +95,10 @@ public class GameController : MonoBehaviour
         }
     }
 
-    #endregion
-
     // Shuffle the player play order RANDOMLY because... it's ... shuffle... you know.
     public static GameObject[] ShufflePlayer(GameObject[] arr)
     {
-        List<KeyValuePair<int, GameObject>> list = arr.Select(s => new KeyValuePair<int, GameObject>(Random.Range(0, 100), s)).ToList();
+        List<KeyValuePair<int, GameObject>> list = arr.Select(s => new KeyValuePair<int, GameObject>(UnityEngine.Random.Range(0, 100), s)).ToList();
         var sorted = from item in list
                      orderby item.Key
                      select item;
@@ -132,34 +112,128 @@ public class GameController : MonoBehaviour
         return result;
     }
 
-    // Create the array of tank that will fight in the field.
-    public void Play()
+    internal void AddPlayerInfo(NetworkPlayer player)
     {
-        if (SceneManager.GetActiveScene().name != PLAYER_SCENE_NAME)
+        playerList2.Add(new GamePlayer(player));
+        AddLineToChat("System", player.ipAddress + " joined the server");
+    }
+    internal void SetPlayerReady(NetworkPlayer _player)
+    {
+        if (!isServer)
             return;
 
-        int index = 0;
+        GamePlayer player = playerList2.FirstOrDefault(p => p.networkPlayer.guid == _player.guid);
+        if (player == null)
+            return;
 
-        foreach (var row in rowEntryArray)
+        player.isReady = !player.isReady;
+        if (player.isReady)
         {
-            Toggle toggle = row.GetComponentInChildren<Toggle>();
-            InputField inputField = row.GetComponentInChildren<InputField>();
-            if (toggle.isOn)
+            AddLineToChat("System", player.GetIpAddress + " is ready!");
+            StartGameIfAllReady();
+        }
+        else
+            AddLineToChat("System", player.GetIpAddress + " is not ready!");
+    }
+
+    private void StartGameIfAllReady()
+    {
+        if (!isServer)
+            return;
+        if (CheckIfAllReady())
+        {
+            RpcLoadScene();
+        }
+    }
+
+    private bool CheckIfAllReady()
+    {
+        foreach (GamePlayer player in playerList2)
+        {
+            if (!player.isReady)
             {
-
-                float randomXPos = Random.Range(minSpawnX, maxSpawnX);
-                Vector3 spawnPos = new Vector3(randomXPos, spawnY, 0.0f);
-                GameObject playerTank = Instantiate(tankPrefab, spawnPos, Quaternion.identity) as GameObject;
-                GameObject.DontDestroyOnLoad(playerTank);
-                TankController tankController = playerTank.GetComponent<TankController>();
-                tankController.SetHasFired(false);
-                PlayerInfo info = playerTank.GetComponent<PlayerInfo>();
-                info.playerName = inputField.text;
-                playerList[index] = playerTank;
-
-                index++;
+                return false;
             }
         }
-        SceneManager.LoadScene("Game");
+        return true;
+    }
+
+    [ClientRpc]
+    void RpcLoadScene()
+    {
+        if (isLocalPlayer)
+        {
+            SceneManager.LoadScene(GAME_SCENE_NAME);
+        }
+    }
+
+
+
+    // this is temporary
+
+    public float chatWidth = 500.0f;
+    public float chatHeight = 300.0f;
+
+    private Vector2 scrollPosition = Vector2.zero;
+    private List<string> saidStuff = new List<string>();
+    void OnGUI()
+    {
+        var ViewPort = (25 * (saidStuff.Count - 4));
+        if (ViewPort < 0)
+        {
+            ViewPort = 0;
+        }
+        scrollPosition = GUI.BeginScrollView(new Rect(10, 10, 420, 100), scrollPosition, new Rect(0, 0, 400, 100 + ViewPort), false, true);
+        var HeightOfBox = (25 * (saidStuff.Count - 4));
+        if (HeightOfBox < 0)
+        {
+            HeightOfBox = 0;
+        }
+        GUI.Box(new Rect(0, 0, 400, 100 + HeightOfBox), " ");
+        for (var i = 0; i < saidStuff.Count; i++)
+        {
+            GUI.Label(new Rect(0, (25 * i), 400, 23), saidStuff[i]);
+        }
+        GUI.EndScrollView();
+    }
+    void AddLineToChat(string name, string text)
+    {
+
+        saidStuff.Add(text);
+        if (text == "/Help")
+        {
+            //...
+        }
+        if (text == "/Top")
+        {
+            scrollPosition = Vector2.zero;
+        }
+        else
+        {
+            Vector2 LowestSpot = new Vector2(0, 25 * (saidStuff.Count - 4));
+            if (LowestSpot.y < 0)
+            {
+                LowestSpot.y = 0;
+            }
+            scrollPosition = LowestSpot;
+        }
+        if (text == "/Clear")
+        {
+            saidStuff = new List<string>();
+            AddLineToChat("", "Cleared chat");
+        }
+    }
+    internal class GamePlayer
+    {
+        public NetworkPlayer networkPlayer;
+        public bool isReady { get; set; }
+
+        public GamePlayer(NetworkPlayer player)
+        {
+            networkPlayer = player;
+            isReady = false;
+        }
+
+        public string GetIpAddress { get { return networkPlayer.ipAddress; } }
     }
 }
