@@ -1,10 +1,12 @@
 ﻿using UnityEngine;
 using System.Collections;
-
-public enum Direction
+namespace Games.Utils
 {
-    Left,
-    Right,
-    Up,
-    Down
+    public enum Direction
+    {
+        Left,
+        Right,
+        Up,
+        Down
+    }
 }

@@ -45,6 +45,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\DebugUI.cs" />
      <Compile Include="Assets\Lobby\Scripts\DraggablePanel.cs" />
      <Compile Include="Assets\Lobby\Scripts\EventSystemChecker.cs" />
      <Compile Include="Assets\Lobby\Scripts\Lobby\LobbyCountdownPanel.cs" />
@@ -61,6 +62,7 @@
      <Compile Include="Assets\scripts\ChatController.cs" />
      <Compile Include="Assets\scripts\GameController.cs" />
      <Compile Include="Assets\scripts\GizmosDrawing\RaycastGizmosDraw.cs" />
+     <Compile Include="Assets\scripts\MatchController.cs" />
      <Compile Include="Assets\scripts\NetworkControllers\UserController.cs" />
      <Compile Include="Assets\scripts\NetworkLobbyHook.cs" />
      <Compile Include="Assets\scripts\Objects\Implementations\Player.cs" />
@@ -72,6 +74,7 @@
      <Compile Include="Assets\scripts\TankController.cs" />
      <Compile Include="Assets\scripts\UI\ArcUI.cs" />
      <Compile Include="Assets\scripts\Utils\Enum.cs" />
+     <Compile Include="Assets\scripts\Utils\UUID.cs" />
      <None Include="Assets\Lobby\Documentation.txt" />
      <None Include="Assets\Lobby\Instruction.txt" />
      <None Include="Assets\scripts\libs\log.txt" />

@@ -6,6 +6,8 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine.Networking;
 
+using Games.Utils;
+
 [RequireComponent(typeof(BoxCollider2D))]
 [RequireComponent(typeof(Rigidbody2D))]
 [SelectionBase]
@@ -17,6 +19,8 @@ public class TankController : NetworkBehaviour
     public float firePower; // the fire power of the shoot in %
     [SyncVar]
     public float fireAngleDeg;
+    [SyncVar]
+    public bool isMyTurn;
     public float nextTurnDelay = 2.0f;
     public GameObject firedProjectile;
 
@@ -45,8 +49,7 @@ public class TankController : NetworkBehaviour
     Animator animator;
 
     int _rayCount = 8;
-
-    public bool _isMyTurn;
+    
     bool _isGrounded;
     bool _isOnSlope;
 
@@ -66,6 +69,8 @@ public class TankController : NetworkBehaviour
     Direction TankFacingDirection;
     [SyncVar]
     public Color color;
+    [SyncVar]
+    public bool hasPlayed;
 
     int GetTankMovingDirection
     {
@@ -90,7 +95,6 @@ public class TankController : NetworkBehaviour
         animator = _spriteTransform.GetComponent<Animator>();
 
         _velocity = Vector2.zero;
-        _isMyTurn = true;
 
         float initAngle = endAngle - startAngle;
         GetCanon().eulerAngles = new Vector3(0f, 0f, initAngle);
@@ -99,6 +103,7 @@ public class TankController : NetworkBehaviour
     internal void SetHasFired(bool v)
     {
         animator.SetBool("hasFired", v);
+        hasPlayed = false;
     }
 
     void Start()
@@ -112,7 +117,7 @@ public class TankController : NetworkBehaviour
 
         TankFacingDirection = Direction.Right; 
 
-        if (_isMyTurn)
+        if (isMyTurn)
         {
             UpdateFireAngleUI();
             UpdateFirePowerUI();
@@ -137,7 +142,7 @@ public class TankController : NetworkBehaviour
         }
 
 
-        if (_isMyTurn /*&& !animator.GetBool("hasFired")*/)
+        if (isMyTurn /*&& !animator.GetBool("hasFired")*/)
         {
             _bounds.x = _collider.bounds.min.x;
             _bounds.y = _collider.bounds.min.y;
@@ -172,9 +177,7 @@ public class TankController : NetworkBehaviour
 
             if (animator.GetBool("hasFired") && firedProjectile == null)
             {
-                _isMyTurn = false;
-                //animator.SetBool("hasFired", false);
-                Invoke("NextTurn", nextTurnDelay);
+                
             }
             ApplyMovementInput();
         }
@@ -374,6 +377,8 @@ public class TankController : NetworkBehaviour
     {
         animator.SetBool("isCharging", false);
         animator.SetBool("hasFired", true);
+        isMyTurn = false;
+        hasPlayed = true;
         CmdFireWeapon(firePower, fireAngleDeg);
         firePower = 0.0f;
     }

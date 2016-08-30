@@ -7,11 +7,12 @@ using UnityEngine.Networking;
 using System;
 using UnityEngine.SceneManagement;
 
+using Games.Utils;
+
 public class GameController : NetworkBehaviour
 {
 
-    private List<GameObject> playerList;
-    private List<GamePlayer> playerList2;
+
     private GameObject tankPrefab;
 
     [SerializeField]
@@ -22,11 +23,14 @@ public class GameController : NetworkBehaviour
     private const string GAME_SCENE_NAME = "Game";
     private const string PLAYER_SCENE_NAME = "PlayerCreation";
     const int MAX_PLAYER = 8;
+    [SerializeField]
+    private bool hasGameStarted = false;
 
+    private GameObject[] playerList = new GameObject[MAX_PLAYER];
+    private int turnCount;
 
     void Awake()
     {
-        playerList = new List<GameObject>();
         if (instance != null)
         {
             Destroy(gameObject);
@@ -39,63 +43,160 @@ public class GameController : NetworkBehaviour
         }
     }
 
-    private int? GetNextAvailableSlot()
+    // executed by the server only
+    public void StartGame()
     {
-        if (!isServer)
-            return null;
+        if (!hasGameStarted)
+        {
+            playerList = ShufflePlayer(playerList);
+            hasGameStarted = true;
+        }
+    }
+    bool hasPrinted = false;
+    void Update()
+    {
+        if (!hasGameStarted || !isServer)
+        {
+            return;
+        }
 
+        if (!hasPrinted)
+        {
+            foreach (GameObject player in playerList)
+            {
+                if (player == null)
+                    continue;
+                TankController tank = player.GetComponent<TankController>();
+                PlayerInfo playerInfo = player.GetComponent<PlayerInfo>();
+                string dbgstr = String.Format("Player {0}, IsTurn? {1}", playerInfo.playerName, tank.isMyTurn);
+                Debug.Log(dbgstr);
+            }
+            hasPrinted = true;
+        }
+
+        GameObject currentPlayer = playerList[currentPlayerIndex];
+        Debug.Log("CurrentPlayerIndex = " + currentPlayerIndex);
+        if (currentPlayer != null)
+        {
+            Debug.Log("We have a current player.");
+            TankController tank = currentPlayer.GetComponent<TankController>();
+            PlayerInfo playerInfo = currentPlayer.GetComponent<PlayerInfo>();
+            if (!tank.isMyTurn && tank.hasPlayed)
+            {
+                Debug.Log("CurrentPlayer has Played. Finding next player");
+                IncreasePlayerIndex();
+            }
+            else if (!tank.isMyTurn && !tank.hasPlayed)
+            {
+                Debug.Log("New Player Found !!");
+                RpcSetNewTurn(currentPlayer);
+            }
+        }
+        else
+        {
+            IncreasePlayerIndex();
+        }
+    }
+
+    void IncreasePlayerIndex()
+    {
+        if (currentPlayerIndex == playerList.Count() - 1)
+        {
+            currentPlayerIndex = 0;
+            turnCount++;
+        }
+        else
+        {
+            currentPlayerIndex++;
+        }
+    }
+
+    [ClientRpc]
+    private void RpcNotifyNewTurn(string _playerName)
+    {
+        if (isLocalPlayer)
+        {
+            Debug.Log("It's your turn.");
+        }
+        else
+        {
+            Debug.Log(String.Format("It's {0}'s turn", _playerName));
+        }
+    }
+
+    public bool PlayerHasPlayed()
+    {
         for (int i = 0; i < playerList.Count(); i++)
         {
             if (playerList[i] == null)
-                return i;
+                continue;
+            if (playerList[i].GetComponent<TankController>().isMyTurn)
+                return false;
         }
-        Debug.LogWarning("Server is full !");
-        return null;
+        return true;
     }
 
-
-    // Set the next player in turn to play
-    public void PlayNext()
+    public void RegisterPlayer(GameObject gamePlayer)
     {
-        if (!isServer)
-            return;
-        bool foundNext = false;
-        while (!foundNext)
+
+        TankController tank = gamePlayer.GetComponent<TankController>();
+        tank.isMyTurn = false;
+        tank.hasPlayed = false;
+        PlayerInfo tankInfo = gamePlayer.GetComponent<PlayerInfo>();
+        tankInfo.UUID = UUID.GetUniqueID();
+
+        playerList[GetNextAvailableSlot()] = gamePlayer;
+    }
+
+    private int GetNextAvailableSlot()
+    {
+        for (int i = 0; i < playerList.Count(); i++)
         {
-            if (currentPlayerIndex >= playerList.Count - 1)
-                currentPlayerIndex = 0;
-            else
-                currentPlayerIndex++;
-            GameObject tank = playerList[currentPlayerIndex];
-            Debug.Log("PlayerIndex " + currentPlayerIndex);
-            if (tank != null)
+            if (playerList[i] == null)
             {
-                PlayerInfo playerInfo = tank.GetComponent<PlayerInfo>();
-                Debug.Log("Tank has been found. " + playerInfo.playerName + "'s turn. ");
-                SetNewTurn(tank);
-                foundNext = true;
+                return i;
             }
         }
+        return -1;
     }
+
+    //// Set the next player in turn to play
+    //public void PlayNext()
+    //{
+    //    if (!isServer)
+    //        return;
+    //    bool foundNext = false;
+    //    while (!foundNext)
+    //    {
+    //        if (currentPlayerIndex >= playerList.Count() - 1)
+    //            currentPlayerIndex = 0;
+    //        else
+    //            currentPlayerIndex++;
+    //        GameObject tank = playerList[currentPlayerIndex];
+    //        Debug.Log("PlayerIndex " + currentPlayerIndex);
+    //        if (tank != null)
+    //        {
+    //            PlayerInfo playerInfo = tank.GetComponent<PlayerInfo>();
+    //            Debug.Log("Tank has been found. " + playerInfo.playerName + "'s turn. ");
+    //            SetNewTurn(tank);
+    //            foundNext = true;
+    //        }
+    //    }
+    //}
 
     // Change the status of playability for each tank in order to only have 1 player wich is his turn
-    private void SetNewTurn(GameObject tank)
+    [ClientRpc]
+    private void RpcSetNewTurn(GameObject tank)
     {
-        if (!isServer)
-            return;
-
-        foreach (var currentTank in playerList)
-        {
-            if (currentTank == null) continue;
-
-            TankController tankController = currentTank.GetComponent<TankController>();
-            tankController._isMyTurn = tank == currentTank;
-            tankController.SetHasFired(false);
-            tankController.HookUIElements();
-        }
+        TankController tankController = tank.GetComponent<TankController>();
+        PlayerInfo playerInfo = tank.GetComponent<PlayerInfo>();
+        tankController.SetHasFired(false);
+        tankController.isMyTurn = true;
+        //RpcNotifyNewTurn(playerInfo.playerName);
+        //tankController.HookUIElements();
     }
 
-    // Shuffle the player play order RANDOMLY because... it's ... shuffle... you know.
+    // Shuffle the player play order RANDOMLY because... it's... random... you know.
     public static GameObject[] ShufflePlayer(GameObject[] arr)
     {
         List<KeyValuePair<int, GameObject>> list = arr.Select(s => new KeyValuePair<int, GameObject>(UnityEngine.Random.Range(0, 100), s)).ToList();
@@ -110,130 +211,5 @@ public class GameController : NetworkBehaviour
             index++;
         }
         return result;
-    }
-
-    internal void AddPlayerInfo(NetworkPlayer player)
-    {
-        playerList2.Add(new GamePlayer(player));
-        AddLineToChat("System", player.ipAddress + " joined the server");
-    }
-    internal void SetPlayerReady(NetworkPlayer _player)
-    {
-        if (!isServer)
-            return;
-
-        GamePlayer player = playerList2.FirstOrDefault(p => p.networkPlayer.guid == _player.guid);
-        if (player == null)
-            return;
-
-        player.isReady = !player.isReady;
-        if (player.isReady)
-        {
-            AddLineToChat("System", player.GetIpAddress + " is ready!");
-            StartGameIfAllReady();
-        }
-        else
-            AddLineToChat("System", player.GetIpAddress + " is not ready!");
-    }
-
-    private void StartGameIfAllReady()
-    {
-        if (!isServer)
-            return;
-        if (CheckIfAllReady())
-        {
-            RpcLoadScene();
-        }
-    }
-
-    private bool CheckIfAllReady()
-    {
-        foreach (GamePlayer player in playerList2)
-        {
-            if (!player.isReady)
-            {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    [ClientRpc]
-    void RpcLoadScene()
-    {
-        if (isLocalPlayer)
-        {
-            SceneManager.LoadScene(GAME_SCENE_NAME);
-        }
-    }
-
-
-
-    // this is temporary
-
-    public float chatWidth = 500.0f;
-    public float chatHeight = 300.0f;
-
-    private Vector2 scrollPosition = Vector2.zero;
-    private List<string> saidStuff = new List<string>();
-    void OnGUI()
-    {
-        var ViewPort = (25 * (saidStuff.Count - 4));
-        if (ViewPort < 0)
-        {
-            ViewPort = 0;
-        }
-        scrollPosition = GUI.BeginScrollView(new Rect(10, 10, 420, 100), scrollPosition, new Rect(0, 0, 400, 100 + ViewPort), false, true);
-        var HeightOfBox = (25 * (saidStuff.Count - 4));
-        if (HeightOfBox < 0)
-        {
-            HeightOfBox = 0;
-        }
-        GUI.Box(new Rect(0, 0, 400, 100 + HeightOfBox), " ");
-        for (var i = 0; i < saidStuff.Count; i++)
-        {
-            GUI.Label(new Rect(0, (25 * i), 400, 23), saidStuff[i]);
-        }
-        GUI.EndScrollView();
-    }
-    void AddLineToChat(string name, string text)
-    {
-
-        saidStuff.Add(text);
-        if (text == "/Help")
-        {
-            //...
-        }
-        if (text == "/Top")
-        {
-            scrollPosition = Vector2.zero;
-        }
-        else
-        {
-            Vector2 LowestSpot = new Vector2(0, 25 * (saidStuff.Count - 4));
-            if (LowestSpot.y < 0)
-            {
-                LowestSpot.y = 0;
-            }
-            scrollPosition = LowestSpot;
-        }
-        if (text == "/Clear")
-        {
-            saidStuff = new List<string>();
-            AddLineToChat("", "Cleared chat");
-        }
-    }
-    internal class GamePlayer
-    {
-        public NetworkPlayer networkPlayer;
-        public bool isReady { get; set; }
-
-        public GamePlayer(NetworkPlayer player)
-        {
-            networkPlayer = player;
-            isReady = false;
-        }
-
-        public string GetIpAddress { get { return networkPlayer.ipAddress; } }
     }
 }

@@ -11,7 +11,13 @@ public class NetworkLobbyHook : LobbyHook {
         TankController tank = gamePlayer.GetComponent<TankController>();
         PlayerInfo tankInfo = gamePlayer.GetComponent<PlayerInfo>();
 
-        tankInfo.playerName = lobby.name;
+        tankInfo.playerName = lobby.playerName;
         tank.color = lobby.playerColor;
+
+        GameController gameController = FindObjectOfType<GameController>();
+        if (gameController != null)
+        {
+            gameController.RegisterPlayer(gamePlayer);
+        }
     }
 }

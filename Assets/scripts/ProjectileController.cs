@@ -76,7 +76,7 @@ public class ProjectileController : NetworkBehaviour
                 Vector2 hitPos = new Vector2(hit.transform.position.x, hit.transform.position.y);
                 
                 
-                float halfWidth = hit.transform.FindChild("SpriteGraphics").GetComponent<SpriteRenderer>().bounds.size.x / 2;
+                float halfWidth = hit.transform.FindChild("SpriteGraphics").GetComponent<MeshRenderer>().bounds.size.x / 2;
                 Debug.Log("half width = " + halfWidth);
                 float distanceToMiddle = Vector2.Distance(transform.position, hitPos) - halfWidth;
                 Debug.Log("radius " + radius + " / distance = " + distanceToMiddle + " = " +  radius / distanceToMiddle);

@@ -7,11 +7,12 @@ public class PlayerInfo : NetworkBehaviour
     public int maxHealth;
     [SyncVar]
     public int health;
-
+    [SyncVar]
     private string _playerName;
 
     public PlayerNameLabel playerNameLabel;
-
+    public string UUID;
+    
     public string playerName
     {
         get { return _playerName; }

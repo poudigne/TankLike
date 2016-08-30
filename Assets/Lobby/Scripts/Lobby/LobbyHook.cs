@@ -12,5 +12,4 @@ namespace Prototype.NetworkLobby
     {
         public virtual void OnLobbyServerSceneLoadedForPlayer(NetworkManager manager, GameObject lobbyPlayer, GameObject gamePlayer) { }
     }
-
 }
