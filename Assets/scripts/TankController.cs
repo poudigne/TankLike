@@ -17,10 +17,6 @@ public class TankController : NetworkBehaviour
     public float chargingSpeed = 0.01f;
 
     public float firePower; // the fire power of the shoot in %
-    [SyncVar]
-    public float fireAngleDeg;
-    [SyncVar]
-    public bool isMyTurn;
     public float nextTurnDelay = 2.0f;
     public GameObject firedProjectile;
 
@@ -71,6 +67,10 @@ public class TankController : NetworkBehaviour
     public Color color;
     [SyncVar]
     public bool hasPlayed;
+    [SyncVar]
+    public float fireAngleDeg;
+    [SyncVar]
+    public bool isMyTurn;
 
     int GetTankMovingDirection
     {
@@ -377,8 +377,6 @@ public class TankController : NetworkBehaviour
     {
         animator.SetBool("isCharging", false);
         animator.SetBool("hasFired", true);
-        isMyTurn = false;
-        hasPlayed = true;
         CmdFireWeapon(firePower, fireAngleDeg);
         firePower = 0.0f;
     }
@@ -394,6 +392,8 @@ public class TankController : NetworkBehaviour
         projectileController.shooter = transform;
         NetworkServer.Spawn(firedProjectile);
         animator.SetBool("hasFired", false);
+        isMyTurn = false;
+        hasPlayed = true;
     }
 
     // Restrict the canon rotation

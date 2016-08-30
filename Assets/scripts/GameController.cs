@@ -60,8 +60,6 @@ public class GameController : NetworkBehaviour
             return;
         }
 
-        if (!hasPrinted)
-        {
             foreach (GameObject player in playerList)
             {
                 if (player == null)
@@ -72,24 +70,25 @@ public class GameController : NetworkBehaviour
                 Debug.Log(dbgstr);
             }
             hasPrinted = true;
-        }
 
         GameObject currentPlayer = playerList[currentPlayerIndex];
-        Debug.Log("CurrentPlayerIndex = " + currentPlayerIndex);
         if (currentPlayer != null)
         {
-            Debug.Log("We have a current player.");
             TankController tank = currentPlayer.GetComponent<TankController>();
             PlayerInfo playerInfo = currentPlayer.GetComponent<PlayerInfo>();
+            Debug.Log("We have a current player : " + playerInfo.playerName);
+
             if (!tank.isMyTurn && tank.hasPlayed)
             {
                 Debug.Log("CurrentPlayer has Played. Finding next player");
+
                 IncreasePlayerIndex();
+                tank.hasPlayed = false;
             }
             else if (!tank.isMyTurn && !tank.hasPlayed)
             {
                 Debug.Log("New Player Found !!");
-                RpcSetNewTurn(currentPlayer);
+                SetNewTurn(currentPlayer);
             }
         }
         else
@@ -185,8 +184,7 @@ public class GameController : NetworkBehaviour
     //}
 
     // Change the status of playability for each tank in order to only have 1 player wich is his turn
-    [ClientRpc]
-    private void RpcSetNewTurn(GameObject tank)
+    private void SetNewTurn(GameObject tank)
     {
         TankController tankController = tank.GetComponent<TankController>();
         PlayerInfo playerInfo = tank.GetComponent<PlayerInfo>();

@@ -18,6 +18,7 @@ public class ProjectileController : NetworkBehaviour
     [SerializeField]
     private float radius = 0.4f;
 
+    //[SyncVar]
     private CameraController camera_controller;
 
 
