@@ -1,0 +1,56 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!78 &1
+TagManager:
+  serializedVersion: 2
+  tags:
+  - projectile
+  - spawn_limit_height
+  - spawn_limit_left
+  - spawn_limit_right
+  - power_value_slider
+  - power_value_label
+  - angle_value_label
+  - input_username
+  - input_password
+  - input_firstname
+  - input_lastname
+  - input_confirmpassword
+  - input_email
+  layers:
+  - Default
+  - TransparentFX
+  - Ignore Raycast
+  - 
+  - Water
+  - UI
+  - 
+  - 
+  - hostileProjectile
+  - hostileTank
+  - friendlyTank
+  - friendlyProjectile
+  - Ground
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  - 
+  m_SortingLayers:
+  - name: Default
+    uniqueID: 0
+    locked: 0
