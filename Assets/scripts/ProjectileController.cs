@@ -49,9 +49,8 @@ public class ProjectileController:NetworkBehaviour {
     }
 
     void OnCollisionEnter2D(Collision2D other) {
-        GameObject explosion = Instantiate(explosionAnim, gameObject.transform.position, Quaternion.identity)as GameObject; 
-        ParticleSystem explosionPFX = explosion.GetComponent < ParticleSystem > (); 
-        Destroy(explosion, explosionPFX.duration); 
+        ParticleSystem explosion = Instantiate(explosionAnim, gameObject.transform.position, Quaternion.identity) as ParticleSystem; 
+        Destroy(explosion, explosion.main.duration); 
 
         CalculateDamage(); 
         Destroy(gameObject); 
@@ -89,13 +88,14 @@ public class ProjectileController:NetworkBehaviour {
         defenderInfo.DoDamage(damageAmount); 
         Transform tank = transform.parent;
 
-        InvokeDamageDone(new DamageDoneEventArgs(this, damageAmount));
+        InvokeDamageDone(this, damageAmount);
     }
 
-    public delegate void DamageDoneEventHandler(TankController send, int damageAmount);
+    public delegate void DamageDoneEventHandler(ProjectileController sender, float damageAmount);
     public event DamageDoneEventHandler DamageDone;
 
-    private void InvokeDamageDone(int damageAmount){
+    private void InvokeDamageDone(ProjectileController sender, float damageAmount)
+    {
         if (DamageDone != null){
             DamageDone(this, damageAmount);
         }

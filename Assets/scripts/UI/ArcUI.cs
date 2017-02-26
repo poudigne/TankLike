@@ -2,7 +2,8 @@
 using System.Collections;
 
 [RequireComponent(typeof(LineRenderer))]
-public class ArcUI : MonoBehaviour {
+public class ArcUI : MonoBehaviour
+{
 
     public int segments = 50;
     public float radius = 0.5f;
@@ -16,7 +17,8 @@ public class ArcUI : MonoBehaviour {
     float endAngle = 0.0f;
 
     // Use this for initialization
-    void Start () {
+    void Start()
+    {
         if (transform.parent == null)
             throw new MissingComponentException("Missing tank. Perhaps you should use the prefab?");
 
@@ -25,13 +27,14 @@ public class ArcUI : MonoBehaviour {
         endAngle = tank.endAngle;
 
         lineRenderer = GetComponent<LineRenderer>();
-        lineRenderer.SetVertexCount(segments);
-        lineRenderer.SetColors(Color.red, Color.red);
+        lineRenderer.numPositions = segments;
+        lineRenderer.startColor = Color.red;
+        lineRenderer.endColor = Color.red;
         DrawArc();
-	}
-	
-	// Update is called once per frame
-	void DrawArc()
+    }
+
+    // Update is called once per frame
+    void DrawArc()
     {
         Vector3[] arcPoints = new Vector3[segments];
         float angle = startAngle;
@@ -41,7 +44,7 @@ public class ArcUI : MonoBehaviour {
             float x = Mathf.Sin(Mathf.Deg2Rad * angle) * radius;
             float y = Mathf.Cos(Mathf.Deg2Rad * angle) * radius;
 
-            arcPoints[i] = new Vector3((tank.transform.position.x + x) , (tank.transform.position.y + y), 0.25f);
+            arcPoints[i] = new Vector3((tank.transform.position.x + x), (tank.transform.position.y + y), 0.25f);
 
             angle += (arcLength / segments);
         }
